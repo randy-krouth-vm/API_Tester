@@ -1044,3 +1044,4 @@ C:\Users\randy\Downloads\API_Tester\API_Tester\obj\Debug\net10.0-windows10.0.190
 C:\Users\randy\Downloads\API_Tester\API_Tester\obj\Debug\net10.0-windows10.0.19041.0\win-x64\qualifiers.txt
 C:\Users\randy\Downloads\API_Tester\API_Tester\obj\Debug\net10.0-windows10.0.19041.0\win-x64\qualifiers.txt.intermediate
 C:\Users\randy\Downloads\API_Tester\API_Tester\obj\Debug\net10.0-windows10.0.19041.0\win-x64\MultipleQualifiersPerDimensionFound.txt
+C:\Users\randy\Downloads\API_Tester\API_Tester\obj\Debug\net10.0-windows10.0.19041.0\win-x64\API_Tester.sourcelink.json
