@@ -1,0 +1,190 @@
+{
+  "version": "1.0",
+  "engineModes": [
+    "Safe",
+    "Standard",
+    "Aggressive"
+  ],
+  "categories": [
+    {
+      "name": "Injection",
+      "description": "Input injection vulnerabilities",
+      "tests": [
+        {
+          "id": "INJ-SQLI-001",
+          "name": "Basic SQL Injection - OR 1=1",
+          "category": "Injection",
+          "subCategory": "SQL Injection",
+          "severity": "High",
+          "destructive": false,
+          "method": "GET",
+          "pathTemplate": "/resource?id={{payload}}",
+          "headersTemplate": {},
+          "bodyTemplate": null,
+          "payloads": [
+            "' OR 1=1 --",
+            "\" OR 1=1 --",
+            "' OR 'a'='a"
+          ],
+          "expectedIndicators": [
+            "SQL",
+            "syntax error",
+            "database error",
+            "ODBC"
+          ],
+          "successCriteria": "Response contains SQL error pattern or abnormal 500",
+          "standards": {
+            "OWASP_API_Top_10": [
+              "API8:2023 Injection"
+            ],
+            "OWASP_ASVS": [
+              "V5.3"
+            ],
+            "MITRE_ATT&CK": [
+              "T1190"
+            ],
+            "CWE": [
+              "CWE-89"
+            ]
+          }
+        },
+        {
+          "id": "INJ-NOSQL-001",
+          "name": "NoSQL Injection - Mongo Operator",
+          "category": "Injection",
+          "subCategory": "NoSQL",
+          "severity": "High",
+          "destructive": false,
+          "method": "POST",
+          "pathTemplate": "/login",
+          "headersTemplate": {
+            "Content-Type": "application/json"
+          },
+          "bodyTemplate": {
+            "username": "{{payload}}",
+            "password": "test"
+          },
+          "payloads": [
+            {
+              "$ne": null
+            },
+            {
+              "$gt": ""
+            }
+          ],
+          "expectedIndicators": [
+            "authentication bypass"
+          ],
+          "successCriteria": "Unexpected successful auth path for invalid credentials",
+          "standards": {
+            "OWASP_API_Top_10": [
+              "API8:2023 Injection"
+            ],
+            "CWE": [
+              "CWE-943"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "description": "Token and credential abuse",
+      "tests": [
+        {
+          "id": "AUTH-JWT-NONE-001",
+          "name": "JWT none-alg Bypass",
+          "category": "Authentication",
+          "subCategory": "JWT",
+          "severity": "Critical",
+          "destructive": false,
+          "method": "GET",
+          "pathTemplate": "/protected",
+          "headersTemplate": {
+            "Authorization": "Bearer {{payload}}"
+          },
+          "bodyTemplate": null,
+          "payloads": [
+            "GENERATE_NONE_ALG_TOKEN"
+          ],
+          "expectedIndicators": [
+            "200 OK without valid signature"
+          ],
+          "successCriteria": "Unsigned token should never authorize privileged request",
+          "standards": {
+            "OWASP_API_Top_10": [
+              "API2:2023 Broken Authentication"
+            ],
+            "CWE": [
+              "CWE-347"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concurrency",
+      "description": "Race and state manipulation",
+      "tests": [
+        {
+          "id": "CONC-RACE-001",
+          "name": "Simultaneous Transaction Replay",
+          "category": "Concurrency",
+          "subCategory": "RaceCondition",
+          "severity": "Critical",
+          "destructive": true,
+          "method": "POST",
+          "pathTemplate": "/purchase",
+          "headersTemplate": {
+            "Content-Type": "application/json"
+          },
+          "bodyTemplate": {
+            "itemId": "123",
+            "quantity": 1
+          },
+          "payloads": [],
+          "expectedIndicators": [
+            "duplicate success",
+            "balance mismatch"
+          ],
+          "successCriteria": "Concurrent purchase requests should not create inconsistent state",
+          "standards": {
+            "OWASP_API_Top_10": [
+              "API6:2023 Business Logic Flaw"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protocol",
+      "description": "HTTP/TLS level manipulation",
+      "tests": [
+        {
+          "id": "PROT-SMUGGLE-001",
+          "name": "CL-TE Desync Test (Metadata Only)",
+          "category": "Protocol",
+          "subCategory": "RequestSmuggling",
+          "severity": "Critical",
+          "destructive": true,
+          "method": "RAW",
+          "pathTemplate": "/",
+          "headersTemplate": {},
+          "bodyTemplate": null,
+          "payloads": [
+            "POST / HTTP/1.1\\r\\nHost: {{host}}\\r\\nContent-Length: 13\\r\\nTransfer-Encoding: chunked\\r\\n\\r\\n0\\r\\n\\r\\nGET /admin HTTP/1.1\\r\\nHost: {{host}}\\r\\n\\r\\n"
+          ],
+          "expectedIndicators": [
+            "unexpected admin response"
+          ],
+          "successCriteria": "Server/proxy parsing should not desync",
+          "standards": {
+            "MITRE_ATT&CK": [
+              "T1190"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

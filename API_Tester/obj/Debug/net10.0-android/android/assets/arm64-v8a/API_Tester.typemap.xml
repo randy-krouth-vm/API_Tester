@@ -1,0 +1,10 @@
+<api type="debug" assembly-name="API_Tester" mvid="e05d5a3260684f8ab2eade170a9c125d">
+  <java-to-managed>
+    <entry java-name="crc64a5a60e8cd8795d27/MainActivity" managed-name="API_Tester.MainActivity, API_Tester" managed-type-token-id="33554441" />
+    <entry java-name="crc64a5a60e8cd8795d27/MainApplication" managed-name="API_Tester.MainApplication, API_Tester" managed-type-token-id="33554442" />
+  </java-to-managed>
+  <managed-to-java>
+    <entry java-name="crc64a5a60e8cd8795d27/MainActivity" managed-name="API_Tester.MainActivity, API_Tester" managed-type-token-id="33554441" />
+    <entry java-name="crc64a5a60e8cd8795d27/MainApplication" managed-name="API_Tester.MainApplication, API_Tester" managed-type-token-id="33554442" />
+  </managed-to-java>
+</api>

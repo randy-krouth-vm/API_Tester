@@ -1,0 +1,11 @@
+# IDE
+.vs/
+*.user
+*.suo
+
+# Logs
+cache/logs/*.txt
+
+# Optional: large local corpus/cache files
+# cache/cve-corpus.ndjson
+# cache/cve-function-map.ndjson
