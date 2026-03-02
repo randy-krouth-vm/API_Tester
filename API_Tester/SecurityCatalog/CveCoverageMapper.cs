@@ -1,7 +1,15 @@
+using System.Text.RegularExpressions;
+using System.Text.Json;
+
 namespace API_Tester.SecurityCatalog;
 
 public static class CveCoverageMapper
 {
+    private static readonly Lazy<IReadOnlyDictionary<string, double>> CodeDerivedFunctionEffectiveness =
+        new(BuildCodeDerivedFunctionEffectiveness);
+    private static readonly Lazy<CalibrationModel?> Calibration =
+        new(LoadCalibrationModel);
+
     private static readonly string[] InputAbuseKeywords =
     {
         "input validation", "improper input", "validation error", "sanitization", "unsanitized",
@@ -428,7 +436,7 @@ public static class CveCoverageMapper
         var fallback = signals.Any(s => s.Equals("fallback:baseline", StringComparison.Ordinal));
 
         var knownWeights = functions
-            .Select(f => FunctionEffectiveness.TryGetValue(f, out var w) ? w : 0.70)
+            .Select(GetEffectiveFunctionWeight)
             .ToList();
         var avgFunctionQuality = knownWeights.Count == 0 ? 0.70 : knownWeights.Average();
 
@@ -501,10 +509,7 @@ public static class CveCoverageMapper
             _ => 0.46
         };
 
-        var quality = functions
-            .Select(f => FunctionEffectiveness.TryGetValue(f, out var w) ? w : 0.68)
-            .DefaultIfEmpty(0.68)
-            .Average();
+        var codeAppliedCoverage = CalculateAppliedCodeCoverageScore(functions, signals, confidence);
 
         var baselineOnly = new HashSet<string>(functions, StringComparer.Ordinal)
             .SetEquals(new[]
@@ -528,7 +533,8 @@ public static class CveCoverageMapper
         var breadthBoost = Math.Min(functions.Count, 6) * 0.01;
 
         var preventionNorm = Math.Clamp(defaultSettingsPreventionScore / 100.0, 0.0, 1.0);
-        var fused = (confidenceScore * 0.32) + (confidenceEvidence * 0.26) + (quality * 0.22) + (preventionNorm * 0.20);
+        // Prioritize concrete test-code application; use mapping confidence as a secondary stabilizer.
+        var fused = (codeAppliedCoverage * 0.50) + (confidenceScore * 0.22) + (confidenceEvidence * 0.14) + (preventionNorm * 0.14);
         var adjusted = Math.Clamp(fused + settingsBoost + breadthBoost - evidencePenalty, 0.18, 0.98);
         return Math.Round(adjusted * 100.0, 2);
     }
@@ -552,5 +558,572 @@ public static class CveCoverageMapper
         }
 
         return false;
+    }
+
+    private static double GetEffectiveFunctionWeight(string functionName)
+    {
+        var configured = FunctionEffectiveness.TryGetValue(functionName, out var configuredWeight)
+            ? configuredWeight
+            : 0.70;
+        var merged = configured;
+
+        if (CodeDerivedFunctionEffectiveness.Value.TryGetValue(functionName, out var codeDerived))
+        {
+            // Favor measured code characteristics while keeping configured weights as a stabilizer.
+            merged = Math.Clamp(Math.Round((configured * 0.35) + (codeDerived * 0.65), 4), 0.55, 0.96);
+        }
+
+        if (Calibration.Value is not null &&
+            Calibration.Value.Functions.TryGetValue(functionName, out var functionStats))
+        {
+            // Bayesian-style shrinkage: empirical performance gets more influence as sample count rises.
+            var empiricalBlend = Math.Clamp(functionStats.Samples / (functionStats.Samples + 40.0), 0.0, 0.70);
+            merged = (merged * (1.0 - empiricalBlend)) + (functionStats.SuccessRate * empiricalBlend);
+        }
+
+        return Math.Clamp(Math.Round(merged, 4), 0.50, 0.96);
+    }
+
+    private static IReadOnlyDictionary<string, double> BuildCodeDerivedFunctionEffectiveness()
+    {
+        var sourcePath = TryResolveMainPageSourcePath();
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            return new Dictionary<string, double>(StringComparer.Ordinal);
+        }
+
+        string source;
+        try
+        {
+            source = File.ReadAllText(sourcePath);
+        }
+        catch
+        {
+            return new Dictionary<string, double>(StringComparer.Ordinal);
+        }
+
+        var methods = ExtractRunTestMethodBodies(source);
+        if (methods.Count == 0)
+        {
+            return new Dictionary<string, double>(StringComparer.Ordinal);
+        }
+
+        var scores = new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var kv in methods)
+        {
+            scores[kv.Key] = ComputeCodeDerivedWeight(kv.Value);
+        }
+
+        return scores;
+    }
+
+    private static string? TryResolveMainPageSourcePath()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        for (var i = 0; i < 14 && current is not null; i++)
+        {
+            var direct = Path.Combine(current.FullName, "MainPage.xaml.cs");
+            if (File.Exists(direct))
+            {
+                return direct;
+            }
+
+            var nested = Path.Combine(current.FullName, "API_Tester", "MainPage.xaml.cs");
+            if (File.Exists(nested))
+            {
+                return nested;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
+    }
+
+    private static Dictionary<string, string> ExtractRunTestMethodBodies(string source)
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        var methodPattern = new Regex(
+            @"private\s+async\s+Task<string>\s+(Run[A-Za-z0-9_]+TestsAsync)\s*\([^)]*\)\s*\{",
+            RegexOptions.Compiled);
+
+        foreach (Match match in methodPattern.Matches(source))
+        {
+            if (match.Groups.Count < 2)
+            {
+                continue;
+            }
+
+            var methodName = match.Groups[1].Value;
+            var openBraceIndex = source.IndexOf('{', match.Index);
+            if (openBraceIndex < 0)
+            {
+                continue;
+            }
+
+            var closeBraceIndex = FindMatchingBrace(source, openBraceIndex);
+            if (closeBraceIndex <= openBraceIndex)
+            {
+                continue;
+            }
+
+            var body = source.Substring(openBraceIndex + 1, closeBraceIndex - openBraceIndex - 1);
+            result[methodName] = body;
+        }
+
+        return result;
+    }
+
+    private static int FindMatchingBrace(string text, int openBraceIndex)
+    {
+        var depth = 0;
+        for (var i = openBraceIndex; i < text.Length; i++)
+        {
+            if (text[i] == '{')
+            {
+                depth++;
+            }
+            else if (text[i] == '}')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private static double ComputeCodeDerivedWeight(string body)
+    {
+        var safeSendCalls = CountOccurrences(body, "SafeSendAsync(");
+        var appendQueryCalls = CountOccurrences(body, "AppendQuery(");
+        var findingsAdds = CountOccurrences(body, "findings.Add(");
+        var conditionals = CountOccurrences(body, "if (");
+        var catches = CountOccurrences(body, "catch");
+
+        var httpMethodSet = new HashSet<string>(StringComparer.Ordinal);
+        foreach (Match match in Regex.Matches(body, @"HttpMethod\.(Get|Post|Put|Delete|Patch|Head|Options)"))
+        {
+            if (match.Groups.Count > 1)
+            {
+                httpMethodSet.Add(match.Groups[1].Value);
+            }
+        }
+
+        var analysisSignals = 0;
+        if (body.Contains("TryGetHeader(", StringComparison.Ordinal)) analysisSignals++;
+        if (body.Contains("ContainsAny(", StringComparison.Ordinal)) analysisSignals++;
+        if (body.Contains("Regex(", StringComparison.Ordinal)) analysisSignals++;
+        if (body.Contains("Json", StringComparison.Ordinal)) analysisSignals++;
+        if (body.Contains("UriBuilder", StringComparison.Ordinal)) analysisSignals++;
+        if (body.Contains("ReadBodyAsync(", StringComparison.Ordinal)) analysisSignals++;
+
+        var baseWeight = 0.56;
+        var probeDepth = Math.Min(safeSendCalls + appendQueryCalls, 8) * 0.035;
+        var evidenceDepth = Math.Min(findingsAdds, 10) * 0.015;
+        var branchDepth = Math.Min(conditionals + catches, 12) * 0.008;
+        var methodBreadth = Math.Min(httpMethodSet.Count, 4) * 0.02;
+        var analysisDepth = Math.Min(analysisSignals, 6) * 0.02;
+
+        var computed = baseWeight + probeDepth + evidenceDepth + branchDepth + methodBreadth + analysisDepth;
+        return Math.Clamp(Math.Round(computed, 4), 0.55, 0.95);
+    }
+
+    private static int CountOccurrences(string text, string token)
+    {
+        if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(token))
+        {
+            return 0;
+        }
+
+        var count = 0;
+        var index = 0;
+        while (true)
+        {
+            index = text.IndexOf(token, index, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                break;
+            }
+
+            count++;
+            index += token.Length;
+        }
+
+        return count;
+    }
+
+    private static double CalculateAppliedCodeCoverageScore(
+        IReadOnlyList<string> functions,
+        IReadOnlyList<string> signals,
+        string confidence)
+    {
+        if (functions.Count == 0)
+        {
+            return 0.28;
+        }
+
+        var baselineOnly = new HashSet<string>(functions, StringComparer.Ordinal)
+            .SetEquals(new[]
+            {
+                "RunSecurityMisconfigurationTestsAsync",
+                "RunInformationDisclosureTestsAsync",
+                "RunAuthAndAccessControlTestsAsync"
+            });
+
+        var weights = functions
+            .Select(GetEffectiveFunctionWeight)
+            .OrderByDescending(x => x)
+            .ToArray();
+
+        // Diminishing returns: additional tests add value, but less than the primary targeted test.
+        var diminishing = new[] { 1.00, 0.72, 0.55, 0.42, 0.34, 0.28, 0.23, 0.19, 0.16, 0.14 };
+        var weightedSum = 0.0;
+        var weightNorm = 0.0;
+        for (var i = 0; i < weights.Length; i++)
+        {
+            var f = i < diminishing.Length ? diminishing[i] : 0.12;
+            weightedSum += weights[i] * f;
+            weightNorm += f;
+        }
+
+        var precisionCore = weightNorm <= 0.0 ? 0.62 : (weightedSum / weightNorm);
+
+        var categories = functions.Select(GetFunctionCategory).ToArray();
+        var uniqueCategories = new HashSet<string>(categories, StringComparer.Ordinal);
+        var categoryBreadthBoost = Math.Min(uniqueCategories.Count, 5) * 0.025;
+
+        var redundancyPenalty = 0.0;
+        foreach (var grp in categories.GroupBy(x => x, StringComparer.Ordinal))
+        {
+            if (grp.Count() > 2)
+            {
+                redundancyPenalty += Math.Min((grp.Count() - 2) * 0.02, 0.08);
+            }
+        }
+
+        var hasCweSignal = signals.Any(s => s.StartsWith("cwe:", StringComparison.Ordinal));
+        var hasDescSignal = signals.Any(s => s.StartsWith("desc:", StringComparison.Ordinal));
+        var heuristics = signals.Count(s => s.StartsWith("heuristic:", StringComparison.Ordinal));
+        var evidenceBoost = hasCweSignal ? 0.06 : hasDescSignal ? 0.03 : 0.0;
+        var heuristicPenalty = !hasCweSignal && !hasDescSignal ? Math.Min(heuristics * 0.01, 0.04) : 0.0;
+        var realismAdjustment = ComputeRealismAdjustment(functions, hasCweSignal, hasDescSignal);
+        var domainAdjustment = ComputeDomainSpecificAdjustment(functions, hasCweSignal, hasDescSignal);
+        var calibrationUncertaintyPenalty = ComputeCalibrationUncertaintyPenalty(functions);
+
+        // Allow one very strong, precise test mapping to rank high when evidence supports it.
+        var singleTestPrecisionBonus = functions.Count == 1 && (hasCweSignal || hasDescSignal) && weights[0] >= 0.84
+            ? 0.06
+            : 0.0;
+
+        // Penalize broad bundles when evidence is weak (common source of inflated-looking scores).
+        var broadWeakEvidencePenalty = functions.Count >= 5 && !hasCweSignal && !hasDescSignal
+            ? 0.06
+            : 0.0;
+
+        var confidenceAdjustment = confidence switch
+        {
+            "high" => 0.02,
+            "medium" => 0.0,
+            _ => -0.015
+        };
+
+        var baselinePenalty = baselineOnly ? 0.22 : 0.0;
+
+        var raw = precisionCore
+            + categoryBreadthBoost
+            + evidenceBoost
+            + singleTestPrecisionBonus
+            + confidenceAdjustment
+            + realismAdjustment
+            + domainAdjustment
+            - redundancyPenalty
+            - heuristicPenalty
+            - broadWeakEvidencePenalty
+            - calibrationUncertaintyPenalty
+            - baselinePenalty;
+        return Math.Clamp(Math.Round(raw, 4), 0.18, 0.98);
+    }
+
+    private static string GetFunctionCategory(string functionName)
+    {
+        if (functionName.Contains("Auth", StringComparison.Ordinal) ||
+            functionName.Contains("Jwt", StringComparison.Ordinal) ||
+            functionName.Contains("OAuth", StringComparison.Ordinal) ||
+            functionName.Contains("Oidc", StringComparison.Ordinal) ||
+            functionName.Contains("Bola", StringComparison.Ordinal) ||
+            functionName.Contains("Privilege", StringComparison.Ordinal))
+        {
+            return "identity-access";
+        }
+
+        if (functionName.Contains("Sql", StringComparison.Ordinal) ||
+            functionName.Contains("Xss", StringComparison.Ordinal) ||
+            functionName.Contains("Injection", StringComparison.Ordinal) ||
+            functionName.Contains("Xxe", StringComparison.Ordinal) ||
+            functionName.Contains("Deserialization", StringComparison.Ordinal) ||
+            functionName.Contains("Traversal", StringComparison.Ordinal))
+        {
+            return "input-injection";
+        }
+
+        if (functionName.Contains("Tls", StringComparison.Ordinal) ||
+            functionName.Contains("Transport", StringComparison.Ordinal) ||
+            functionName.Contains("Header", StringComparison.Ordinal) ||
+            functionName.Contains("Cors", StringComparison.Ordinal) ||
+            functionName.Contains("Certificate", StringComparison.Ordinal) ||
+            functionName.Contains("Mtls", StringComparison.Ordinal))
+        {
+            return "transport-config";
+        }
+
+        if (functionName.Contains("Smuggling", StringComparison.Ordinal) ||
+            functionName.Contains("RateLimit", StringComparison.Ordinal) ||
+            functionName.Contains("GraphQl", StringComparison.Ordinal) ||
+            functionName.Contains("Grpc", StringComparison.Ordinal) ||
+            functionName.Contains("WebSocket", StringComparison.Ordinal) ||
+            functionName.Contains("Payload", StringComparison.Ordinal))
+        {
+            return "protocol-abuse";
+        }
+
+        if (functionName.Contains("Docker", StringComparison.Ordinal) ||
+            functionName.Contains("Port", StringComparison.Ordinal) ||
+            functionName.Contains("Cloud", StringComparison.Ordinal) ||
+            functionName.Contains("EnvFile", StringComparison.Ordinal) ||
+            functionName.Contains("Subdomain", StringComparison.Ordinal))
+        {
+            return "infra-exposure";
+        }
+
+        if (functionName.Contains("Mobile", StringComparison.Ordinal) ||
+            functionName.Contains("DeepLink", StringComparison.Ordinal) ||
+            functionName.Contains("Pinning", StringComparison.Ordinal))
+        {
+            return "mobile-client";
+        }
+
+        return "general";
+    }
+
+    private static double ComputeRealismAdjustment(
+        IReadOnlyList<string> functions,
+        bool hasCweSignal,
+        bool hasDescSignal)
+    {
+        var exploitDriven = 0;
+        var passiveSignal = 0;
+        var envDependent = 0;
+
+        foreach (var function in functions)
+        {
+            if (IsExploitDrivenFunction(function))
+            {
+                exploitDriven++;
+            }
+
+            if (IsPassiveSignalFunction(function))
+            {
+                passiveSignal++;
+            }
+
+            if (IsEnvironmentDependentFunction(function))
+            {
+                envDependent++;
+            }
+        }
+
+        var exploitBoost = Math.Min(exploitDriven * 0.012, 0.07);
+        var passivePenalty = Math.Min(passiveSignal * 0.014, 0.08);
+        var weakEvidence = !hasCweSignal && !hasDescSignal;
+        var envPenalty = weakEvidence ? Math.Min(envDependent * 0.015, 0.07) : Math.Min(envDependent * 0.008, 0.04);
+
+        return exploitBoost - passivePenalty - envPenalty;
+    }
+
+    private static bool IsExploitDrivenFunction(string functionName)
+    {
+        return functionName.Contains("Injection", StringComparison.Ordinal) ||
+               functionName.Contains("Sql", StringComparison.Ordinal) ||
+               functionName.Contains("Xss", StringComparison.Ordinal) ||
+               functionName.Contains("Bola", StringComparison.Ordinal) ||
+               functionName.Contains("Traversal", StringComparison.Ordinal) ||
+               functionName.Contains("Desync", StringComparison.Ordinal) ||
+               functionName.Contains("Smuggling", StringComparison.Ordinal) ||
+               functionName.Contains("Jwt", StringComparison.Ordinal) ||
+               functionName.Contains("OAuth", StringComparison.Ordinal) ||
+               functionName.Contains("Oidc", StringComparison.Ordinal) ||
+               functionName.Contains("Xxe", StringComparison.Ordinal) ||
+               functionName.Contains("FileUpload", StringComparison.Ordinal) ||
+               functionName.Contains("PrivilegeEscalation", StringComparison.Ordinal);
+    }
+
+    private static bool IsPassiveSignalFunction(string functionName)
+    {
+        return functionName.Contains("Signal", StringComparison.Ordinal) ||
+               functionName.Contains("Inventory", StringComparison.Ordinal) ||
+               functionName.Contains("Discovery", StringComparison.Ordinal) ||
+               functionName.Contains("Fingerprint", StringComparison.Ordinal) ||
+               functionName.Contains("Posture", StringComparison.Ordinal) ||
+               functionName.Contains("Header", StringComparison.Ordinal) ||
+               functionName.Contains("Exposure", StringComparison.Ordinal);
+    }
+
+    private static bool IsEnvironmentDependentFunction(string functionName)
+    {
+        return functionName.Contains("Docker", StringComparison.Ordinal) ||
+               functionName.Contains("Cloud", StringComparison.Ordinal) ||
+               functionName.Contains("Mobile", StringComparison.Ordinal) ||
+               functionName.Contains("Mtls", StringComparison.Ordinal) ||
+               functionName.Contains("Grpc", StringComparison.Ordinal) ||
+               functionName.Contains("WebSocket", StringComparison.Ordinal);
+    }
+
+    private static double ComputeDomainSpecificAdjustment(
+        IReadOnlyList<string> functions,
+        bool hasCweSignal,
+        bool hasDescSignal)
+    {
+        var hasStrongEvidence = hasCweSignal || hasDescSignal;
+
+        // Cert/transport validation can be very high confidence when directly mapped.
+        var certFamilyCount = functions.Count(f =>
+            f.Contains("CertificateTrustChain", StringComparison.Ordinal) ||
+            f.Contains("TlsPosture", StringComparison.Ordinal) ||
+            f.Contains("TransportSecurity", StringComparison.Ordinal) ||
+            f.Contains("MtlsRequired", StringComparison.Ordinal));
+
+        var certAdjustment = 0.0;
+        if (certFamilyCount > 0 && hasStrongEvidence)
+        {
+            certAdjustment += certFamilyCount >= 2 ? 0.05 : 0.03;
+        }
+
+        // SQL/injection should not look "complete" from a single narrow probe.
+        var sqlFamilyCount = functions.Count(f =>
+            f.Contains("SqlInjection", StringComparison.Ordinal) ||
+            f.Contains("CommandInjection", StringComparison.Ordinal) ||
+            f.Contains("ContentTypeValidation", StringComparison.Ordinal) ||
+            f.Contains("ParameterPollution", StringComparison.Ordinal) ||
+            f.Contains("OpenApiSchemaMismatch", StringComparison.Ordinal) ||
+            f.Contains("TokenParserFuzz", StringComparison.Ordinal));
+
+        var sqlSingleProbePenalty = sqlFamilyCount == 1 ? 0.06 : 0.0;
+        var sqlBreadthBoost = sqlFamilyCount >= 3 ? 0.03 : sqlFamilyCount == 2 ? 0.015 : 0.0;
+
+        return certAdjustment + sqlBreadthBoost - sqlSingleProbePenalty;
+    }
+
+    private static double ComputeCalibrationUncertaintyPenalty(IReadOnlyList<string> functions)
+    {
+        if (functions.Count == 0)
+        {
+            return 0.04;
+        }
+
+        var calibration = Calibration.Value;
+        if (calibration is null || calibration.Functions.Count == 0)
+        {
+            // Conservative when no benchmark calibration is available.
+            return 0.035;
+        }
+
+        var reliabilities = new List<double>(functions.Count);
+        foreach (var function in functions.Distinct(StringComparer.Ordinal))
+        {
+            if (calibration.Functions.TryGetValue(function, out var stats))
+            {
+                var reliability = Math.Clamp(stats.Samples / (stats.Samples + 30.0), 0.0, 1.0);
+                reliabilities.Add(reliability);
+            }
+            else
+            {
+                reliabilities.Add(0.0);
+            }
+        }
+
+        var avgReliability = reliabilities.Count == 0 ? 0.0 : reliabilities.Average();
+        var penalty = (1.0 - avgReliability) * 0.06;
+        return Math.Clamp(Math.Round(penalty, 4), 0.0, 0.07);
+    }
+
+    private static CalibrationModel? LoadCalibrationModel()
+    {
+        var path = TryResolveCalibrationPath();
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var json = File.ReadAllText(path);
+            var parsed = JsonSerializer.Deserialize<CoverageCalibrationDocument>(json);
+            if (parsed?.Functions is null || parsed.Functions.Count == 0)
+            {
+                return null;
+            }
+
+            var functions = new Dictionary<string, CalibrationStats>(StringComparer.Ordinal);
+            foreach (var kv in parsed.Functions)
+            {
+                if (string.IsNullOrWhiteSpace(kv.Key) || kv.Value is null)
+                {
+                    continue;
+                }
+
+                var rate = Math.Clamp(kv.Value.SuccessRate, 0.0, 1.0);
+                var samples = Math.Max(0, kv.Value.Samples);
+                functions[kv.Key.Trim()] = new CalibrationStats(rate, samples);
+            }
+
+            return functions.Count == 0 ? null : new CalibrationModel(functions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? TryResolveCalibrationPath()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        for (var i = 0; i < 14 && current is not null; i++)
+        {
+            var cachePath = Path.Combine(current.FullName, "cache", "coverage-calibration.json");
+            if (File.Exists(cachePath))
+            {
+                return cachePath;
+            }
+
+            var localPath = Path.Combine(current.FullName, "coverage-calibration.json");
+            if (File.Exists(localPath))
+            {
+                return localPath;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
+    }
+
+    private sealed record CalibrationStats(double SuccessRate, int Samples);
+
+    private sealed record CalibrationModel(
+        IReadOnlyDictionary<string, CalibrationStats> Functions);
+
+    private sealed class CoverageCalibrationDocument
+    {
+        public Dictionary<string, CoverageCalibrationFunction>? Functions { get; set; }
+    }
+
+    private sealed class CoverageCalibrationFunction
+    {
+        public double SuccessRate { get; set; }
+        public int Samples { get; set; }
     }
 }

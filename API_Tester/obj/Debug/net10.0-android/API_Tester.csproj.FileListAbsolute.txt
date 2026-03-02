@@ -2696,3 +2696,4 @@ C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-android\android
 C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-android\android\assets\x86_64\Microsoft.Extensions.Options.ConfigurationExtensions.dll
 C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-android\android\assets\x86_64\Microsoft.Extensions.Options.ConfigurationExtensions.jlo.xml
 C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-android\android\assets\x86_64\Microsoft.Extensions.Options.ConfigurationExtensions.typemap.xml
+C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-android\API_Tester.sourcelink.json

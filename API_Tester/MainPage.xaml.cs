@@ -9,6 +9,13 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using API_Tester.SecurityCatalog;
+#if WINDOWS
+using Microsoft.UI.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
+using Windows.System;
+using Windows.UI.Core;
+#endif
 
 namespace API_Tester
 {
@@ -19,6 +26,18 @@ namespace API_Tester
         private const int CvePageSize = 250;
         private bool _isCorpusGridMode;
         private bool _isFunctionMapTextMode;
+        private bool _startupInitialized;
+        private readonly System.Threading.AsyncLocal<string?> _activeStandardTestKey = new();
+        private static readonly Color ActiveNavColor = Color.FromArgb("#6B7280");
+        private static readonly Color InactiveNavColor = Color.FromArgb("#6B7280");
+        private string? _resultsFindQuery;
+        private int _resultsFindIndex = -1;
+        private bool _resultsFindCaseSensitive;
+        private bool _suppressFindPromptOnNextInvoke;
+#if WINDOWS
+        private FrameworkElement? _windowsRootElement;
+        private bool _windowsGlobalKeyAttached;
+#endif
 
         public MainPage()
         {
@@ -27,12 +46,12 @@ namespace API_Tester
             ResultsEditor.Text = "Use this only on APIs you own or are explicitly authorized to test.";
             RunScopePicker.SelectedIndex = 0;
             PriorityFilterPicker.SelectedIndex = 0;
-            ShowCveText(BuildCveTestReference());
+            Loaded += OnMainPageLoaded;
         }
 
         private static HttpClient ResolveHttpClient()
         {
-            var services = Application.Current?.Handler?.MauiContext?.Services;
+            var services = Microsoft.Maui.Controls.Application.Current?.Handler?.MauiContext?.Services;
             var factory = services?.GetService<IHttpClientFactory>();
             if (factory is not null)
             {
@@ -41,6 +60,31 @@ namespace API_Tester
             }
 
             return new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+        }
+
+        private void OnMainPageLoaded(object? sender, EventArgs e)
+        {
+            if (_startupInitialized)
+            {
+                return;
+            }
+
+            _startupInitialized = true;
+            Loaded -= OnMainPageLoaded;
+
+            try
+            {
+                var startupText = BuildCveTestReference();
+                ShowCveText(startupText);
+                SetActiveNavButton("top");
+#if WINDOWS
+                AttachWindowsFindKeyHandling();
+#endif
+            }
+            catch (Exception ex)
+            {
+                SetResult($"Startup initialization failed: {ex.Message}");
+            }
         }
 
         private async void OnSyncCveCorpusClicked(object? sender, EventArgs e)
@@ -140,6 +184,236 @@ namespace API_Tester
             {
                 SetBusy(false);
             }
+        }
+
+        private async void OnFindInResultsClicked(object? sender, EventArgs e)
+        {
+            if (_suppressFindPromptOnNextInvoke && !string.IsNullOrWhiteSpace(_resultsFindQuery))
+            {
+                _suppressFindPromptOnNextInvoke = false;
+                await FindInResultsAsync(forward: true);
+                return;
+            }
+
+            _suppressFindPromptOnNextInvoke = false;
+            var prompt = await PromptFindInResultsAsync();
+            if (!prompt.Accepted)
+            {
+                return;
+            }
+
+            var query = prompt.Query.Trim();
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return;
+            }
+
+            _resultsFindCaseSensitive = prompt.CaseSensitive;
+            _resultsFindQuery = query;
+            _resultsFindIndex = -1;
+#if WINDOWS
+            ResultsEditor.Focus();
+#endif
+            await FindInResultsAsync(forward: true);
+        }
+
+        private async Task<(bool Accepted, string Query, bool CaseSensitive)> PromptFindInResultsAsync()
+        {
+            var initial = string.IsNullOrWhiteSpace(_resultsFindQuery) ? string.Empty : _resultsFindQuery;
+#if WINDOWS
+            var textBox = new Microsoft.UI.Xaml.Controls.TextBox
+            {
+                Text = initial
+            };
+
+            var caseToggle = new Microsoft.UI.Xaml.Controls.CheckBox
+            {
+                Content = "Case sensitive",
+                IsChecked = _resultsFindCaseSensitive,
+                Margin = new Microsoft.UI.Xaml.Thickness(0, 10, 0, 0)
+            };
+
+            var panel = new Microsoft.UI.Xaml.Controls.StackPanel();
+            panel.Children.Add(new Microsoft.UI.Xaml.Controls.TextBlock { Text = "Find:" });
+            panel.Children.Add(textBox);
+            panel.Children.Add(caseToggle);
+
+            var dialog = new Microsoft.UI.Xaml.Controls.ContentDialog
+            {
+                Title = "Find in Results",
+                PrimaryButtonText = "OK",
+                CloseButtonText = "Cancel",
+                DefaultButton = Microsoft.UI.Xaml.Controls.ContentDialogButton.Primary,
+                Content = panel
+            };
+
+            if ((Window?.Handler?.PlatformView as Microsoft.UI.Xaml.Window)?.Content is FrameworkElement root)
+            {
+                dialog.XamlRoot = root.XamlRoot;
+            }
+
+            var result = await dialog.ShowAsync();
+            return result == Microsoft.UI.Xaml.Controls.ContentDialogResult.Primary
+                ? (true, textBox.Text ?? string.Empty, caseToggle.IsChecked == true)
+                : (false, initial, _resultsFindCaseSensitive);
+#else
+            var query = await DisplayPromptAsync("Find in Results", "Find:", initialValue: initial, maxLength: 200, keyboard: Keyboard.Text);
+            return query is null
+                ? (false, initial, _resultsFindCaseSensitive)
+                : (true, query, _resultsFindCaseSensitive);
+#endif
+        }
+
+        private async Task FindInResultsAsync(bool forward)
+        {
+            var text = ResultsEditor.Text ?? string.Empty;
+            if (string.IsNullOrEmpty(text))
+            {
+                await DisplayAlertAsync("Find", "Results are empty.", "OK");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_resultsFindQuery))
+            {
+                var query = await DisplayPromptAsync("Find in Results", "Find:", initialValue: string.Empty, maxLength: 200, keyboard: Keyboard.Text);
+                if (query is null)
+                {
+                    return;
+                }
+
+                query = query.Trim();
+                if (string.IsNullOrWhiteSpace(query))
+                {
+                    return;
+                }
+
+                _resultsFindQuery = query;
+                _resultsFindIndex = -1;
+            }
+
+            var needle = _resultsFindQuery!;
+            var comparison = _resultsFindCaseSensitive
+                ? StringComparison.Ordinal
+                : StringComparison.OrdinalIgnoreCase;
+            var matchIndex = forward
+                ? FindForward(text, needle, _resultsFindIndex, comparison)
+                : FindBackward(text, needle, _resultsFindIndex, comparison);
+
+            if (matchIndex < 0)
+            {
+                await DisplayAlertAsync("Find", $"No matches for \"{needle}\".", "OK");
+                return;
+            }
+
+            _resultsFindIndex = matchIndex;
+            ResultsEditor.CursorPosition = matchIndex;
+            ResultsEditor.SelectionLength = needle.Length;
+        }
+
+#if WINDOWS
+        private void AttachWindowsFindKeyHandling()
+        {
+            if (_windowsGlobalKeyAttached)
+            {
+                return;
+            }
+
+            var element = (Window?.Handler?.PlatformView as Microsoft.UI.Xaml.Window)?.Content as UIElement
+                ?? Handler?.PlatformView as UIElement;
+            if (element is null)
+            {
+                return;
+            }
+
+            _windowsRootElement = element as FrameworkElement;
+            if (_windowsRootElement is null)
+            {
+                return;
+            }
+
+            _windowsRootElement.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler(OnWindowsGlobalKeyDown), true);
+            _windowsGlobalKeyAttached = true;
+        }
+
+        private async void OnWindowsGlobalKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_resultsFindQuery))
+            {
+                return;
+            }
+
+            var controlDown = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+            var altDown = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu) & CoreVirtualKeyStates.Down) == CoreVirtualKeyStates.Down;
+            if (controlDown || altDown)
+            {
+                return;
+            }
+
+            if (e.Key == VirtualKey.Enter)
+            {
+                e.Handled = true;
+                _suppressFindPromptOnNextInvoke = true;
+                await FindInResultsAsync(forward: true);
+            }
+        }
+#endif
+
+        private static int FindForward(string text, string needle, int previousMatchIndex, StringComparison comparison)
+        {
+            if (text.Length == 0)
+            {
+                return -1;
+            }
+
+            var start = previousMatchIndex >= 0
+                ? previousMatchIndex + needle.Length
+                : 0;
+
+            if (start >= text.Length)
+            {
+                start = 0;
+            }
+
+            var hit = text.IndexOf(needle, start, comparison);
+            if (hit >= 0)
+            {
+                return hit;
+            }
+
+            return start > 0
+                ? text.IndexOf(needle, 0, comparison)
+                : -1;
+        }
+
+        private static int FindBackward(string text, string needle, int previousMatchIndex, StringComparison comparison)
+        {
+            if (text.Length == 0)
+            {
+                return -1;
+            }
+
+            var start = previousMatchIndex >= 0
+                ? previousMatchIndex - 1
+                : text.Length - 1;
+
+            if (start < 0)
+            {
+                start = text.Length - 1;
+            }
+            else if (start >= text.Length)
+            {
+                start = text.Length - 1;
+            }
+
+            var hit = text.LastIndexOf(needle, start, comparison);
+            if (hit >= 0)
+            {
+                return hit;
+            }
+
+            return start < text.Length - 1
+                ? text.LastIndexOf(needle, text.Length - 1, comparison)
+                : -1;
         }
 
         private async void OnSaveLogClicked(object? sender, EventArgs e)
@@ -380,6 +654,76 @@ namespace API_Tester
             }
         }
 
+        private async void OnNavigateSectionClicked(object? sender, EventArgs e)
+        {
+            if (sender is not Button { CommandParameter: string targetKey } || string.IsNullOrWhiteSpace(targetKey))
+            {
+                return;
+            }
+
+            VisualElement? anchor = targetKey.Trim().ToLowerInvariant() switch
+            {
+                "top" => TopSectionAnchor,
+                "target" => TargetSectionAnchor,
+                "tests" => IndividualTestsSectionAnchor,
+                "app-standards" => AppStandardsSectionAnchor,
+                "us-federal" => UsFederalSectionAnchor,
+                "international" => InternationalSectionAnchor,
+                "run" => RunSectionAnchor,
+                "cloud-infra" => CloudInfraSectionAnchor,
+                "cve" => CveSectionAnchor,
+                "results" => ResultsSectionAnchor,
+                "bottom" => BottomSectionAnchor,
+                _ => null
+            };
+
+            if (anchor is null)
+            {
+                return;
+            }
+
+            try
+            {
+                await MainScrollView.ScrollToAsync(anchor, ScrollToPosition.Start, true);
+                SetActiveNavButton(targetKey);
+            }
+            catch
+            {
+                // Ignore non-critical scroll navigation errors.
+            }
+        }
+
+        private void SetActiveNavButton(string targetKey)
+        {
+            var key = targetKey.Trim().ToLowerInvariant();
+            var map = new Dictionary<string, Button>(StringComparer.Ordinal)
+            {
+                ["top"] = NavTopButton,
+                ["target"] = NavTargetButton,
+                ["tests"] = NavTestsButton,
+                ["app-standards"] = NavAppStandardsButton,
+                ["us-federal"] = NavUsFederalButton,
+                ["international"] = NavInternationalButton,
+                ["run"] = NavRunAllButton,
+                ["cloud-infra"] = NavCloudInfraButton,
+                ["cve"] = NavCveButton,
+                ["results"] = NavResultsButton,
+                ["bottom"] = NavBottomButton
+            };
+
+            foreach (var button in map.Values)
+            {
+                button.BackgroundColor = InactiveNavColor;
+                button.TextColor = Colors.White;
+            }
+
+            if (map.TryGetValue(key, out var active))
+            {
+                active.BackgroundColor = ActiveNavColor;
+                active.TextColor = Colors.White;
+            }
+        }
+
         private static string BuildFunctionMapReport(
             CveFunctionMapPageResult? page,
             string selectedPriority,
@@ -399,7 +743,9 @@ namespace API_Tester
 
             foreach (var row in filteredRows)
             {
-                sb.AppendLine($"- [{row.RowNumber}] {row.CveId} | {row.Confidence} ({row.ConfidenceScore}) | EstimatedDefaultCoverage={row.RealWorldCoverageScore}/100 | {row.FunctionsPreview}");
+                sb.AppendLine($"- [{row.RowNumber}] {row.CveId} | {row.Confidence} ({row.ConfidenceScore}) | EstimatedDefaultCoverage={row.RealWorldCoverageScore}/100");
+                sb.AppendLine(FormatIndentedFunctions(row.FunctionsPreview));
+                sb.AppendLine();
             }
 
             if (filteredRows.Count == 0)
@@ -408,6 +754,49 @@ namespace API_Tester
             }
 
             return sb.ToString().TrimEnd();
+        }
+
+        private static string FormatIndentedFunctions(string functionsPreview)
+        {
+            const string firstPrefix = "    Functions: ";
+            const string continuationPrefix = "    ";
+            const int maxLineLength = 120;
+
+            if (string.IsNullOrWhiteSpace(functionsPreview))
+            {
+                return $"{firstPrefix}(none)";
+            }
+
+            var items = functionsPreview
+                .Split(", ", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (items.Length == 0)
+            {
+                return $"{firstPrefix}{functionsPreview}";
+            }
+
+            var lines = new List<string>();
+            var current = firstPrefix;
+
+            foreach (var item in items)
+            {
+                var segment = current == firstPrefix ? item : $", {item}";
+                if (current.Length + segment.Length <= maxLineLength)
+                {
+                    current += segment;
+                    continue;
+                }
+
+                if (current != firstPrefix && !current.EndsWith(",", StringComparison.Ordinal))
+                {
+                    current += ",";
+                }
+
+                lines.Add(current);
+                current = continuationPrefix + item;
+            }
+
+            lines.Add(current);
+            return string.Join(Environment.NewLine, lines);
         }
 
         private async void OnTestSsrfClicked(object? sender, EventArgs e) =>
@@ -531,8 +920,25 @@ namespace API_Tester
             await ExecuteFrameworkPackAsync(
                 category,
                 new[] { frameworkName, $"Individual Test: {resolved.TestName}", mappingLine },
-                new[] { resolved.Test },
+                new[] { WrapWithStandardContext(testKey, resolved.Test) },
                 $"Running {frameworkName} - {resolved.TestName}...");
+        }
+
+        private Func<Uri, Task<string>> WrapWithStandardContext(string testKey, Func<Uri, Task<string>> test)
+        {
+            return async uri =>
+            {
+                var previous = _activeStandardTestKey.Value;
+                _activeStandardTestKey.Value = testKey;
+                try
+                {
+                    return await test(uri);
+                }
+                finally
+                {
+                    _activeStandardTestKey.Value = previous;
+                }
+            };
         }
 
         private static string GetFrameworkCategory(string frameworkName)
@@ -1745,13 +2151,19 @@ namespace API_Tester
 
         private bool IsSpiderRouteScopeSelected()
         {
-            var scope = RunScopePicker.SelectedItem?.ToString() ?? "Run Scope";
-            if (scope.Contains("Single Target Only", StringComparison.OrdinalIgnoreCase))
+            var scope = RunScopePicker.SelectedItem?.ToString();
+            if (string.IsNullOrWhiteSpace(scope))
             {
                 return false;
             }
 
-            return true;
+            if (scope.Contains("Single Target Only", StringComparison.OrdinalIgnoreCase) ||
+                scope.Contains("Run Scope", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return scope.Contains("Spider Routes", StringComparison.OrdinalIgnoreCase);
         }
 
         private IEnumerable<(string CategoryName, string[] Frameworks, Func<Uri, Task<string>>[] Tests)> GetStandardFrameworkPacks()
@@ -2256,6 +2668,7 @@ namespace API_Tester
             List<string> Failures);
 
         private sealed record DynamicProbe(string Name, Func<Uri, Task<string>> Execute);
+        private sealed record AuthProbeRequest(string Name, Func<HttpRequestMessage> BuildRequest);
 
         private async Task<string> RunSiteSpiderAndCoverageAsync(Uri baseUri)
         {
@@ -3176,25 +3589,32 @@ namespace API_Tester
 
         private async Task<string> RunSqlInjectionTestsAsync(Uri baseUri)
         {
-            const string payload = "' OR '1'='1";
-            var testUri = AppendQuery(baseUri, new Dictionary<string, string>
-            {
-                ["id"] = payload,
-                ["filter"] = payload
-            });
-
-            var response = await SafeSendAsync(() => new HttpRequestMessage(HttpMethod.Get, testUri));
-            var body = await ReadBodyAsync(response);
-
+            var activeKey = _activeStandardTestKey.Value;
+            var payloads = GetSqlInjectionPayloads(activeKey);
+            var queryFields = GetSqlInjectionQueryFields(activeKey);
             var findings = new List<string>();
-            if (response is null)
+            var testedUris = new List<Uri>();
+            var signatureHits = 0;
+            var noResponse = 0;
+
+            foreach (var payload in payloads)
             {
-                findings.Add("No response received.");
-            }
-            else
-            {
-                findings.Add($"HTTP {(int)response.StatusCode} {response.StatusCode}");
-                findings.Add(ContainsAny(
+                var additions = queryFields.ToDictionary(field => field, _ => payload, StringComparer.OrdinalIgnoreCase);
+                var testUri = AppendQuery(baseUri, additions);
+                testedUris.Add(testUri);
+
+                var response = await SafeSendAsync(() => new HttpRequestMessage(HttpMethod.Get, testUri));
+                var body = await ReadBodyAsync(response);
+
+                if (response is null)
+                {
+                    noResponse++;
+                    findings.Add($"Payload '{payload}': no response.");
+                    continue;
+                }
+
+                findings.Add($"Payload '{payload}': HTTP {(int)response.StatusCode} {response.StatusCode}");
+                if (ContainsAny(
                     body,
                     "sql syntax",
                     "odbc",
@@ -3202,12 +3622,23 @@ namespace API_Tester
                     "postgresql",
                     "sqlite",
                     "unclosed quotation mark",
-                    "ora-")
-                    ? "Potential risk: database error signature detected."
-                    : "No obvious SQL error signatures detected.");
+                    "ora-",
+                    "native client",
+                    "query failed"))
+                {
+                    signatureHits++;
+                }
             }
 
-            return FormatSection("SQL Injection", testUri, findings);
+            findings.Insert(0, $"Probe profile: {(string.IsNullOrWhiteSpace(activeKey) ? "default" : activeKey)} | Payload variants: {payloads.Count} | Query fields: {string.Join(", ", queryFields)}");
+            findings.Add(noResponse == payloads.Count
+                ? "No responses received across SQL payload variants."
+                : signatureHits > 0
+                    ? $"Potential risk: database error signatures detected on {signatureHits}/{payloads.Count} payloads."
+                    : "No obvious SQL error signatures detected across payload variants.");
+
+            var target = testedUris.Count == 0 ? baseUri : testedUris[0];
+            return FormatSection("SQL Injection", target, findings);
         }
 
         private async Task<string> RunSecurityHeaderTestsAsync(Uri baseUri)
@@ -3322,20 +3753,43 @@ namespace API_Tester
 
         private async Task<string> RunAuthAndAccessControlTestsAsync(Uri baseUri)
         {
+            var activeKey = _activeStandardTestKey.Value;
             var findings = new List<string>();
-            var response = await SafeSendAsync(() => new HttpRequestMessage(HttpMethod.Get, baseUri));
+            findings.Add($"Probe profile: {(string.IsNullOrWhiteSpace(activeKey) ? "default" : activeKey)}");
+            var probes = BuildAuthProbeRequests(baseUri, activeKey);
+            var accepted = 0;
+            var blocked = 0;
+            var noResponse = 0;
 
-            if (response is null)
+            foreach (var probe in probes)
             {
-                findings.Add("No response received.");
-                return FormatSection("Authentication and Access Control", baseUri, findings);
+                var response = await SafeSendAsync(() => probe.BuildRequest());
+                if (response is null)
+                {
+                    noResponse++;
+                    findings.Add($"{probe.Name}: no response");
+                    continue;
+                }
+
+                var status = (int)response.StatusCode;
+                findings.Add($"{probe.Name}: HTTP {status} {response.StatusCode}");
+                if (status is >= 200 and < 300)
+                {
+                    accepted++;
+                }
+                else if (status is 401 or 403)
+                {
+                    blocked++;
+                }
             }
 
-            findings.Add($"HTTP {(int)response.StatusCode} {response.StatusCode}");
-            findings.Add(response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.Forbidden
-                ? "Auth barrier detected (401/403) for unauthenticated request."
-                : "Endpoint accepted unauthenticated request (validate intended exposure).");
-
+            findings.Add(accepted > 0
+                ? $"Potential risk: {accepted}/{probes.Count} auth probes were accepted."
+                : blocked > 0
+                    ? $"Auth barrier observed in {blocked}/{probes.Count} probes."
+                    : noResponse == probes.Count
+                        ? "No auth probe responses received."
+                        : "No obvious auth barrier signal from current probes.");
             return FormatSection("Authentication and Access Control", baseUri, findings);
         }
 
@@ -3451,17 +3905,43 @@ namespace API_Tester
 
         private async Task<string> RunRateLimitTestsAsync(Uri baseUri)
         {
+            var activeKey = _activeStandardTestKey.Value;
+            var (attempts, burstSize, methods) = GetRateLimitPlan(activeKey);
             var findings = new List<string>();
-            HttpResponseMessage? lastResponse = null;
+            findings.Add($"Probe profile: {(string.IsNullOrWhiteSpace(activeKey) ? "default" : activeKey)} | Attempts: {attempts} | Burst size: {burstSize}");
+            var responses = new List<HttpResponseMessage?>(attempts);
 
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i < attempts;)
             {
-                lastResponse = await SafeSendAsync(() => new HttpRequestMessage(HttpMethod.Get, baseUri));
-                findings.Add(lastResponse is null
-                    ? $"Request {i + 1}: no response"
-                    : $"Request {i + 1}: HTTP {(int)lastResponse.StatusCode} {lastResponse.StatusCode}");
+                var batchSize = Math.Min(burstSize, attempts - i);
+                var batchTasks = new List<Task<HttpResponseMessage?>>(batchSize);
+                for (var j = 0; j < batchSize; j++)
+                {
+                    var reqIndex = i + j;
+                    var method = methods[reqIndex % methods.Length];
+                    var uri = AppendQuery(baseUri, new Dictionary<string, string>
+                    {
+                        ["ratelimit_probe"] = "1",
+                        ["nonce"] = $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}-{reqIndex}"
+                    });
+
+                    batchTasks.Add(SafeSendAsync(() => new HttpRequestMessage(method, uri)));
+                }
+
+                var batch = await Task.WhenAll(batchTasks);
+                responses.AddRange(batch);
+                i += batchSize;
             }
 
+            for (var i = 0; i < responses.Count; i++)
+            {
+                var response = responses[i];
+                findings.Add(response is null
+                    ? $"Request {i + 1}: no response"
+                    : $"Request {i + 1}: HTTP {(int)response.StatusCode} {response.StatusCode}");
+            }
+
+            var lastResponse = responses.LastOrDefault(r => r is not null);
             if (lastResponse is null)
             {
                 return FormatSection("Rate Limiting", baseUri, findings);
@@ -3469,12 +3949,111 @@ namespace API_Tester
 
             var rateHeaders = new[] { "X-RateLimit-Limit", "X-RateLimit-Remaining", "Retry-After", "RateLimit-Limit", "RateLimit-Remaining" };
             var foundHeaders = rateHeaders.Where(h => HasHeader(lastResponse, h)).ToList();
+            var throttled = responses.Count(r => r is not null && (int)r.StatusCode == 429);
 
             findings.Add(foundHeaders.Count > 0
                 ? $"Rate-limit headers found: {string.Join(", ", foundHeaders)}"
                 : "No standard rate-limit headers found.");
+            findings.Add(throttled > 0
+                ? $"Rate-limit throttling detected on {throttled}/{responses.Count} requests."
+                : "No explicit 429 throttling observed in this probe window.");
 
             return FormatSection("Rate Limiting", baseUri, findings);
+        }
+
+        private static IReadOnlyList<string> GetSqlInjectionPayloads(string? testKey)
+        {
+            var key = testKey?.Trim().ToUpperInvariant() ?? string.Empty;
+            return key switch
+            {
+                "PCIDSS6" or "CSAAPIINJ" or "CIS16" or "WSTGINPV" or "CRESTINJ" or "SAMMVERIFY" or "SDLVERIFY" =>
+                [
+                    "' OR '1'='1",
+                    "' UNION SELECT NULL--",
+                    "1' AND SLEEP(2)--",
+                    "'; WAITFOR DELAY '0:0:2'--"
+                ],
+                "API10" or "OPENAPIMISMATCH" =>
+                [
+                    "' OR 1=1--",
+                    "' OR 'x'='x",
+                    "\" OR \"1\"=\"1",
+                    "') OR ('1'='1"
+                ],
+                _ =>
+                [
+                    "' OR '1'='1",
+                    "' UNION SELECT NULL--"
+                ]
+            };
+        }
+
+        private static IReadOnlyList<string> GetSqlInjectionQueryFields(string? testKey)
+        {
+            var key = testKey?.Trim().ToUpperInvariant() ?? string.Empty;
+            return key switch
+            {
+                "API10" => ["query", "next", "redirect", "returnUrl"],
+                "OPENAPIMISMATCH" => ["id", "filter", "sort", "search"],
+                _ => ["id", "filter", "search"]
+            };
+        }
+
+        private static (int Attempts, int BurstSize, HttpMethod[] Methods) GetRateLimitPlan(string? testKey)
+        {
+            var key = testKey?.Trim().ToUpperInvariant() ?? string.Empty;
+            return key switch
+            {
+                "API4" or "N53SC5" or "FFIECDDOS" or "ZT207CDM" => (16, 4, [HttpMethod.Get, HttpMethod.Get, HttpMethod.Post]),
+                "N61CONTAIN" or "CARTARISK" => (12, 3, [HttpMethod.Get, HttpMethod.Post]),
+                _ => (6, 2, [HttpMethod.Get])
+            };
+        }
+
+        private static IReadOnlyList<AuthProbeRequest> BuildAuthProbeRequests(Uri baseUri, string? testKey)
+        {
+            var key = testKey?.Trim().ToUpperInvariant() ?? string.Empty;
+            var probes = new List<AuthProbeRequest>
+            {
+                new("Unauthenticated GET", () => new HttpRequestMessage(HttpMethod.Get, baseUri)),
+                new("Forged role headers", () =>
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Get, baseUri);
+                    req.Headers.TryAddWithoutValidation("X-Role", "admin");
+                    req.Headers.TryAddWithoutValidation("X-User-Type", "superuser");
+                    return req;
+                }),
+                new("Invalid bearer token", () =>
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Get, baseUri);
+                    req.Headers.TryAddWithoutValidation("Authorization", "Bearer invalid.apitester.token");
+                    return req;
+                })
+            };
+
+            if (key is "N63AAL" or "N53IA2" or "ASVSV2" or "MASVSAUTH")
+            {
+                probes.Add(new AuthProbeRequest("Weak basic credentials", () =>
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Get, baseUri);
+                    var weak = Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:admin"));
+                    req.Headers.TryAddWithoutValidation("Authorization", $"Basic {weak}");
+                    return req;
+                }));
+            }
+
+            if (key is "API5" or "N53AC6" or "MITRET1078")
+            {
+                probes.Add(new AuthProbeRequest("Privilege claim override", () =>
+                {
+                    var req = new HttpRequestMessage(HttpMethod.Get, baseUri);
+                    req.Headers.TryAddWithoutValidation("X-Permissions", "all");
+                    req.Headers.TryAddWithoutValidation("X-Scope", "admin:*");
+                    return req;
+                }));
+            }
+
+            return probes;
         }
 
         private async Task<string> RunInformationDisclosureTestsAsync(Uri baseUri)
@@ -6274,6 +6853,12 @@ namespace API_Tester
 
         private void SetBusy(bool busy, string? message = null)
         {
+            if (!MainThread.IsMainThread)
+            {
+                MainThread.BeginInvokeOnMainThread(() => SetBusy(busy, message));
+                return;
+            }
+
             BusyIndicator.IsVisible = busy;
             BusyIndicator.IsRunning = busy;
             BusyLabel.IsVisible = busy;
@@ -6287,12 +6872,24 @@ namespace API_Tester
 
         private void SetResult(string value)
         {
+            if (!MainThread.IsMainThread)
+            {
+                MainThread.BeginInvokeOnMainThread(() => SetResult(value));
+                return;
+            }
+
             ResultsEditor.Text = value;
             SemanticScreenReader.Announce("Security test completed.");
         }
 
         private static void AnnounceStatus(string message)
         {
+            if (!MainThread.IsMainThread)
+            {
+                MainThread.BeginInvokeOnMainThread(() => AnnounceStatus(message));
+                return;
+            }
+
             SemanticScreenReader.Announce(message);
         }
     }

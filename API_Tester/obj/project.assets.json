@@ -27230,7 +27230,7 @@
       ]
     },
     "Microsoft.Maui.Controls.Build.Tasks/10.0.20": {
-      "sha512": "8DbAwGgvgf3QPV1WCu6CabRDTZjtq7kd11sELwYhZ2ZFCdHtGTeLyvpMgnbAtMUwix4hnGyWH8fZKQJlVDBuYA==",
+      "sha512": "vQsyfUHHSkh9O9lxOcJBDEUxtS+VphI3uxYOB73AZURcj5CpZ0DfLiPKG9SBrp2PkiIFbXPJ2ABbpzMvZVliRw==",
       "type": "package",
       "path": "microsoft.maui.controls.build.tasks/10.0.20",
       "files": [
@@ -27856,7 +27856,7 @@
       ]
     },
     "Microsoft.Maui.Resizetizer/10.0.20": {
-      "sha512": "6MVR9wsKgfN25AuEL/KzDLd5x8TpuBrC0DRvlUq2Ddi0WdO1q0B9VsTePJF8mdDmdLybo4h/F5F59kfOTPzIXA==",
+      "sha512": "lqGi/HjtGPvmzqSR+Ii3ZHdvZj811+sBAxyN+T3jrvKBKd13wdVh9vZEfjmTUE5KA6+6W+6iRk5h62CY8pVogg==",
       "type": "package",
       "path": "microsoft.maui.resizetizer/10.0.20",
       "files": [
@@ -31232,33 +31232,25 @@
   },
   "packageFolders": {
     "C:\\Users\\randy\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {},
-    "C:\\Program Files (x86)\\Syncfusion\\Essential Studio\\DOCX Editor SDK\\32.2.3\\ToolboxNuGetPackages": {},
-    "C:\\Program Files (x86)\\Syncfusion\\Essential Studio\\WPF\\30.1.37\\ToolboxNuGetPackages": {}
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\randy\\Downloads\\API_Tester\\API_Tester\\API_Tester.csproj",
+      "projectUniqueName": "C:\\Users\\randy\\Documents\\API_Tester\\API_Tester\\API_Tester.csproj",
       "projectName": "API_Tester",
-      "projectPath": "C:\\Users\\randy\\Downloads\\API_Tester\\API_Tester\\API_Tester.csproj",
+      "projectPath": "C:\\Users\\randy\\Documents\\API_Tester\\API_Tester\\API_Tester.csproj",
       "packagesPath": "C:\\Users\\randy\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\randy\\Downloads\\API_Tester\\API_Tester\\obj\\",
+      "outputPath": "C:\\Users\\randy\\Documents\\API_Tester\\API_Tester\\obj\\",
       "projectStyle": "PackageReference",
       "crossTargeting": true,
       "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
-        "C:\\Program Files (x86)\\Syncfusion\\Essential Studio\\DOCX Editor SDK\\32.2.3\\ToolboxNuGetPackages",
-        "C:\\Program Files (x86)\\Syncfusion\\Essential Studio\\WPF\\30.1.37\\ToolboxNuGetPackages"
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
         "C:\\Users\\randy\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Syncfusion Toolbox for DOCX Editor SDK.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Syncfusion Toolbox for PDF Viewer SDK.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Syncfusion Toolbox for Spreadsheet Editor SDK.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Syncfusion Toolbox for WPF.config"
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0-android",
@@ -31269,8 +31261,7 @@
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "C:\\Program Files\\dotnet\\library-packs": {},
-        "https://api.nuget.org/v3/index.json": {},
-        "https://dxfeed.jfrog.io/artifactory/api/nuget/v3/nuget-open": {}
+        "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net10.0-android36.0": {

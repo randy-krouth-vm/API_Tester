@@ -320,3 +320,7 @@ C:\Users\randy\Documents\API_Tester\API_Tester\bin\Debug\net10.0-ios\iossimulato
 C:\Users\randy\Documents\API_Tester\API_Tester\bin\Debug\net10.0-ios\iossimulator-x64\Microsoft.Extensions.Diagnostics.dll
 C:\Users\randy\Documents\API_Tester\API_Tester\bin\Debug\net10.0-ios\iossimulator-x64\Microsoft.Extensions.Http.dll
 C:\Users\randy\Documents\API_Tester\API_Tester\bin\Debug\net10.0-ios\iossimulator-x64\Microsoft.Extensions.Options.ConfigurationExtensions.dll
+C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-ios\iossimulator-x64\resizetizer\sp\splash_AEA2C6453BCEF6974FC905214757F59B0359A249ADE416BF7374410B718EF900.png
+C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-ios\iossimulator-x64\resizetizer\sp\splash_AEA2C6453BCEF6974FC905214757F59B0359A249ADE416BF7374410B718EF900@2x.png
+C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-ios\iossimulator-x64\resizetizer\sp\splash_AEA2C6453BCEF6974FC905214757F59B0359A249ADE416BF7374410B718EF900@3x.png
+C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-ios\iossimulator-x64\API_Tester.sourcelink.json

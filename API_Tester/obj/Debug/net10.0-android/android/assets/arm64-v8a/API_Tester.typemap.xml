@@ -1,4 +1,4 @@
-<api type="debug" assembly-name="API_Tester" mvid="e05d5a3260684f8ab2eade170a9c125d">
+<api type="debug" assembly-name="API_Tester" mvid="56ee1015f18041adb23bd52ee777f75f">
   <java-to-managed>
     <entry java-name="crc64a5a60e8cd8795d27/MainActivity" managed-name="API_Tester.MainActivity, API_Tester" managed-type-token-id="33554441" />
     <entry java-name="crc64a5a60e8cd8795d27/MainApplication" managed-name="API_Tester.MainApplication, API_Tester" managed-type-token-id="33554442" />

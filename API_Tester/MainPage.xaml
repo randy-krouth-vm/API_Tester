@@ -4,6 +4,53 @@
              x:Class="API_Tester.MainPage"
              Title="API Security Tester">
 
+    <Shell.TitleView>
+        <Border Padding="4,4"
+                HorizontalOptions="Fill"
+                Stroke="#BFD3D9"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 6">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#EAF4F3" Offset="0.0" />
+                    <GradientStop Color="#E4EDF7" Offset="0.55" />
+                    <GradientStop Color="#EEF1E8" Offset="1.0" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid ColumnDefinitions="Auto,*"
+                  ColumnSpacing="12"
+                  HorizontalOptions="Fill">
+                <Label Grid.Column="0"
+                       Text="API Security Tester"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="22"
+                       VerticalOptions="Center"
+                       TextColor="#0F172A"
+                       Margin="12,0,0,0" />
+                <ScrollView Grid.Column="1"
+                            Orientation="Horizontal"
+                            HorizontalScrollBarVisibility="Never"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="8" Margin="0,0,10,0">
+                        <Button x:Name="NavTopButton" Text="Top" Clicked="OnNavigateSectionClicked" CommandParameter="top" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavTargetButton" Text="Target" Clicked="OnNavigateSectionClicked" CommandParameter="target" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavTestsButton" Text="Tests" Clicked="OnNavigateSectionClicked" CommandParameter="tests" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavAppStandardsButton" Text="App Standards" Clicked="OnNavigateSectionClicked" CommandParameter="app-standards" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavUsFederalButton" Text="U.S. Federal" Clicked="OnNavigateSectionClicked" CommandParameter="us-federal" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavInternationalButton" Text="International" Clicked="OnNavigateSectionClicked" CommandParameter="international" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavCloudInfraButton" Text="Cloud/Infra" Clicked="OnNavigateSectionClicked" CommandParameter="cloud-infra" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavRunAllButton" Text="Run" Clicked="OnNavigateSectionClicked" CommandParameter="run" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavCveButton" Text="CVE" Clicked="OnNavigateSectionClicked" CommandParameter="cve" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavResultsButton" Text="Results" Clicked="OnNavigateSectionClicked" CommandParameter="results" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavFindButton" Text="Find" Clicked="OnFindInResultsClicked" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavBottomButton" Text="Bottom" Clicked="OnNavigateSectionClicked" CommandParameter="bottom" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                    </HorizontalStackLayout>
+                </ScrollView>
+            </Grid>
+        </Border>
+    </Shell.TitleView>
+
     <ContentPage.Background>
         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#EEF7F5" Offset="0.0" />
@@ -73,9 +120,10 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <ScrollView VerticalScrollBarVisibility="Always">
+    <ScrollView x:Name="MainScrollView" VerticalScrollBarVisibility="Always">
         <VerticalStackLayout Padding="18" Spacing="12">
-            <Border BackgroundColor="{StaticResource CardBackground}"
+            <Border x:Name="TopSectionAnchor"
+                    BackgroundColor="{StaticResource CardBackground}"
                     Stroke="{StaticResource CardBorder}"
                     StrokeThickness="1"
                     Padding="16"
@@ -93,7 +141,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Label Text="Target URL" FontAttributes="Bold" />
+            <Label x:Name="TargetSectionAnchor" Text="Target URL" FontAttributes="Bold" />
             <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                 <ActivityIndicator x:Name="BusyIndicator"
                                    IsVisible="False"
@@ -143,7 +191,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Label Text="Individual Security Tests" FontAttributes="Bold" />
+            <Label x:Name="IndividualTestsSectionAnchor" Text="Individual Security Tests" FontAttributes="Bold" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="8" RowDefinitions="Auto,Auto,Auto">
                 <Button Grid.Row="0" Grid.Column="0" Text="Test SSRF" Clicked="OnTestSsrfClicked" />
                 <Button Grid.Row="0" Grid.Column="1" Text="Test XSS" Clicked="OnTestXssClicked" />
@@ -153,7 +201,7 @@
                 <Button Grid.Row="2" Grid.Column="1" Text="Test Methods" Clicked="OnTestMethodsClicked" />
             </Grid>
 
-            <Label Text="Application &amp; API-Specific Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label x:Name="AppStandardsSectionAnchor" Text="Application &amp; API-Specific Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
             <Label Text="OWASP API Security Top 10" FontAttributes="Bold" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                 <Button Grid.Row="0" Grid.Column="0" Text="API1: BOLA" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API1" />
@@ -187,7 +235,7 @@
                 <Button Grid.Row="1" Grid.Column="0" Text="Transport/Configuration Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance API Security guidance|CSAAPITRANS" />
             </Grid>
 
-            <Label Text="U.S. Federal / Government Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label x:Name="UsFederalSectionAnchor" Text="U.S. Federal / Government Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
             <Label Text="NIST SP 800-53" FontAttributes="Bold" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                 <Button Text="AC-2 Account Management" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53AC2" />
@@ -227,7 +275,7 @@
                 <Button Grid.Row="1" Text="Secrets/Metadata Exposure Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-190|N190SECRETS" />
             </Grid>
 
-            <Label Text="International Security Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label x:Name="InternationalSectionAnchor" Text="International Security Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
             <Label Text="ISO 27001" FontAttributes="Bold" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
                 <Button Text="A.5 Organizational Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27001|ISO27001A5" />
@@ -254,7 +302,7 @@
                 <Button Grid.Column="1" Text="PIMS Processor Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27701|ISO27701PROC" />
             </Grid>
 
-            <Label Text="Cloud &amp; Infrastructure Security" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label x:Name="CloudInfraSectionAnchor" Text="Cloud &amp; Infrastructure Security" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
             <Label Text="Cloud Security Alliance CCM" FontAttributes="Bold" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
                 <Button Text="IAM Control Objectives" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance CCM|CCMIAM" />
@@ -464,7 +512,7 @@
                 <Button Grid.Row="45" Text="DEF-91 Mobile Deep-Link Hijacking Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|MOBILEDEEPLINK" />
             </Grid>
 
-            <Label Text="Domain Security Suites" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,12,0,6" />
+            <Label x:Name="RunSectionAnchor" Text="Domain Security Suites" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,12,0,6" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto">
                 <Button Text="Authorization &amp; Access Control" Clicked="OnRunNamedSuiteClicked" CommandParameter="SUITE_AUTHZ" />
                 <Button Grid.Column="1" Text="Injection &amp; Input Validation" Clicked="OnRunNamedSuiteClicked" CommandParameter="SUITE_INJECTION" />
@@ -484,7 +532,7 @@
                     TextColor="White"
                     Clicked="OnRunEverythingClicked" />
 
-            <Label Text="CVE &amp; Test Reference" FontAttributes="Bold" />
+            <Label x:Name="CveSectionAnchor" Text="CVE &amp; Test Reference" FontAttributes="Bold" />
             <VerticalStackLayout Spacing="6">
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
                 <Button Text="Sync Complete CVE Corpus (NVD)"
@@ -515,7 +563,8 @@
                         Clicked="OnNextCvePageClicked" />
             </Grid>
             </VerticalStackLayout>
-            <Label Text="Results"
+            <Label x:Name="ResultsSectionAnchor"
+                   Text="Results"
                    FontAttributes="Bold"
                    SemanticProperties.HeadingLevel="Level2" />
             <Button Text="Save Log"
@@ -560,10 +609,10 @@
                         HeightRequest="44"
                         Clicked="OnApplyPriorityFilterClicked" />
             </Grid>
+            <BoxView x:Name="BottomSectionAnchor"
+                     HeightRequest="1"
+                     Opacity="0" />
         </VerticalStackLayout>
     </ScrollView>
 
 </ContentPage>
-
-
-

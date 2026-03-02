@@ -309,3 +309,4 @@ C:\Users\randy\Documents\API_Tester\API_Tester\bin\Debug\net10.0-maccatalyst\mac
 C:\Users\randy\Documents\API_Tester\API_Tester\bin\Debug\net10.0-maccatalyst\maccatalyst-x64\Microsoft.Extensions.Diagnostics.dll
 C:\Users\randy\Documents\API_Tester\API_Tester\bin\Debug\net10.0-maccatalyst\maccatalyst-x64\Microsoft.Extensions.Http.dll
 C:\Users\randy\Documents\API_Tester\API_Tester\bin\Debug\net10.0-maccatalyst\maccatalyst-x64\Microsoft.Extensions.Options.ConfigurationExtensions.dll
+C:\Users\randy\Documents\API_Tester\API_Tester\obj\Debug\net10.0-maccatalyst\maccatalyst-x64\API_Tester.sourcelink.json

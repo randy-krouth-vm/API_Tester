@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "RunSqlInjectionTestsAsync": {
+      "successRate": 0.74,
+      "samples": 120
+    },
+    "RunCertificateTrustChainTestsAsync": {
+      "successRate": 0.93,
+      "samples": 85
+    },
+    "RunRequestSmugglingSignalTestsAsync": {
+      "successRate": 0.61,
+      "samples": 64
+    }
+  }
+}
