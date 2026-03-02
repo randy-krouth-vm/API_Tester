@@ -1,60 +1,208 @@
-# API Security Tester (Beta)
+---
 
-> Status: **Beta**
+<div align="center">
 
-API Security Tester is a .NET MAUI app built by Codex for authorized API security validation across standards, suites, and route-aware dynamic probes.
+# 🔐 API Security Tester
 
-## Authorized Use Only
-Use this tool only on systems you own or are explicitly authorized to test.
+### Standards-Aligned • Route-Aware • Protocol-Level API Security Validation
 
-<img width="1460" height="898" alt="image" src="https://github.com/user-attachments/assets/9050dd4c-f917-4913-82f0-5d45c3548978" />
+![Status](https://img.shields.io/badge/status-beta-orange)
+![Platform](https://img.shields.io/badge/.NET-MAUI-blue)
+![License](https://img.shields.io/badge/license-Authorized%20Use%20Only-red)
+![Coverage](https://img.shields.io/badge/Coverage-Standards%20%2B%20Suites%20%2B%20Advanced-success)
 
-## Features
-- Standards-aligned test packs (OWASP, NIST, ISO, PCI DSS, etc.)
-- Domain security suites (authz, injection, identity, protocol, hardening, resilience)
-- Dynamic spider-based route discovery and per-route probing
-- CVE corpus sync, mapping, paging, and lookup
-- Log export to repo cache
+</div>
 
-## Run Scope
-- `Single Target Only`: tests run only on the URL you enter.
-- `Spider Routes (All Discovered)`: tests run against spider-discovered routes.
+---
 
-## Run Buttons: What Is Different
-- `Run Maximum Static + Dynamic Coverage`
-  - Coverage-oriented workflow.
-  - Combines static analysis (catalog/OpenAPI posture), spider discovery, dynamic probes, and adaptive endpoint sweep.
-  - Best when you want a consolidated coverage report.
+> ⚠️ **Authorized Use Only**  
+> Use this tool only on systems you own or are explicitly authorized to test.
 
-- `Run All Standards Categories`
-  - Runs standards category packs (OWASP/NIST/ISO/PCI/etc.).
-  - Focuses on framework/compliance-aligned execution.
-  - With spider scope enabled, also includes route discovery/hit/sweep sections.
+---
 
-- `Run Everything (Standards + Suites + Advanced)`
-  - Broadest execution set.
-  - Runs standards packs + domain suites + remaining advanced probes (deduped) and route-level sections when spider scope is enabled.
-  - Use this for the widest practical test pass.
+<img width="1460" height="898" alt="image" src="https://github.com/user-attachments/assets/ae978bc8-9a2a-47bd-98b7-e7de38056736"/>
 
-## Are These The Same On Single Target?
-No. Even in `Single Target Only` scope, `Run Everything` remains broader than `Run Maximum Static + Dynamic Coverage` because it includes standards + suites + advanced grouped execution.
+---
 
-## Quick Start
+## 🧠 What This Is
+
+**API Security Tester** is a .NET MAUI application built for structured, standards-aligned API security validation.
+
+It combines:
+
+- 📚 Compliance framework execution  
+- 🕷 Route-aware dynamic probing  
+- 🔎 Modern attack surface modeling  
+- 🧬 CVE corpus correlation  
+- 🧪 Advanced protocol abuse detection  
+
+This is not just a scanner.  
+It is a multi-domain API validation framework.
+
+---
+
+## 🏛 Standards Coverage
+
+### 🔹 Application & API Standards
+- OWASP API Security Top 10  
+- OWASP ASVS  
+- OWASP MASVS  
+- OWASP Testing Guide  
+- OWASP SAMM  
+
+### 🌐 U.S. Federal
+- NIST SP 800-53  
+- NIST SP 800-61  
+- NIST SP 800-63  
+- NIST SP 800-207 (Zero Trust)  
+- NIST SP 800-190  
+
+### 🌍 International
+- ISO 27001  
+- ISO 27002  
+- ISO 27017  
+- ISO 27018  
+- ISO 27701  
+
+### 🏦 Industry & Regulatory
+- PCI DSS  
+- FFIEC  
+- HIPAA  
+- GDPR  
+- CCPA  
+- CMMC  
+- COBIT  
+
+### ☁ Cloud & Infrastructure
+- Cloud Security Alliance (CSA)  
+- CSA Cloud Controls Matrix  
+- CIS Critical Security Controls  
+- CIS Kubernetes Benchmark  
+- MITRE ATT&CK  
+
+---
+
+## 🧩 Domain Security Suites
+
+Grouped execution modes:
+
+- 🔐 Authorization & Access Control  
+- 💉 Injection & Input Validation  
+- 🪪 Identity & Token Security  
+- 🌐 API Infrastructure & Protocol  
+- 🛡 HTTP & Server Hardening  
+- ♻ Resilience & Information Disclosure  
+
+---
+
+## 🛠 Advanced Technical Probes (90+)
+
+Modern attack surface validation including:
+
+- JWT none-alg, kid injection, RS256↔HS256 confusion  
+- OAuth / OIDC state & nonce replay  
+- HTTP request desync (CL.TE / TE.CL / dual-length)  
+- GraphQL depth & complexity abuse  
+- gRPC reflection & metadata abuse  
+- mTLS enforcement validation  
+- DNS rebinding probe  
+- JWKS poisoning  
+- Cloud metadata (IMDSv2) exposure  
+- File upload & mass assignment abuse  
+- XXE & entity expansion  
+- WebSocket injection & fragmentation  
+- Side-channel timing signals  
+- Docker API exposure  
+- Subdomain takeover detection  
+- CSP / Clickjacking posture  
+- Mobile deep-link & storage checks  
+- LLM prompt injection probe  
+
+Designed to reflect modern API threat models.
+
+---
+
+## 🧬 CVE Integration
+
+- Full NVD corpus sync  
+- Local indexing  
+- Function-to-CVE mapping  
+- Paging & filtering  
+- Priority-based view  
+
+Supports defensive correlation workflows.
+
+---
+
+## 🚀 Execution Modes
+
+### 🟢 Run Maximum Static + Dynamic Coverage
+Coverage-focused execution:
+- Static posture analysis  
+- Spider discovery  
+- Adaptive endpoint sweep  
+- Consolidated reporting  
+
+### 🔵 Run All Standards Categories
+Framework-aligned compliance execution.
+
+### 🔴 Run Everything (Standards + Suites + Advanced)
+Broadest execution set:
+- Standards  
+- Domain suites  
+- Advanced probes  
+- Deduplicated execution  
+- Route-level testing (if spider enabled)
+
+---
+
+## 🎯 Run Scope
+
+| Mode | Description |
+|------|------------|
+| `Single Target Only` | Tests run only on the entered URL |
+| `Spider Routes (All Discovered)` | Tests run against spider-discovered endpoints |
+
+---
+
+## ⚡ Quick Start
+
 ```powershell
 dotnet build API_Tester.slnx -nologo
 dotnet run --project API_Tester/API_Tester.csproj -f net10.0-windows10.0.19041.0
 ```
 
-## Logs and Cache
-- Cache root: `cache/`
-- Saved logs: `cache/logs/`
+---
 
-## CI Extras (Optional)
-Set `API_TESTER_CI_EXTRAS=true` to enable additional guessed-route candidates during crawling in CI pipelines.
+## 📂 Logs & Cache
 
-## Limitations
-- Heuristic testing can produce false positives/negatives.
-- Dynamic route coverage depends on discoverability and chosen run scope.
+- Cache root: `cache/`  
+- Saved logs: `cache/logs/`  
+- CVE corpus + function mapping supported  
 
 ---
-Built by Codex.
+
+## 🤖 CI Support
+
+Enable additional guessed-route discovery during CI:
+
+```powershell
+API_TESTER_CI_EXTRAS=true
+```
+
+---
+
+## ⚠ Limitations
+
+- Heuristic testing may produce false positives/negatives  
+- Dynamic coverage depends on route discoverability  
+- Not a replacement for manual security review  
+
+---
+
+<div align="center">
+
+Built with Codex  
+.NET MAUI • API Security • Compliance Validation • Modern Attack Surface Modeling
+
+</div>
