@@ -25,7 +25,7 @@
 
 ## 🧠 What This Is
 
-**API Security Tester** is a .NET MAUI application built for structured, standards-aligned API security validation.
+**API Security Tester** is a .NET MAUI application built by Codex for structured, standards-aligned API security validation.
 
 It combines:
 
