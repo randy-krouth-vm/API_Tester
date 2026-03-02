@@ -8,7 +8,6 @@
 
 ![Status](https://img.shields.io/badge/status-beta-orange)
 ![Platform](https://img.shields.io/badge/.NET-MAUI-blue)
-![License](https://img.shields.io/badge/license-Authorized%20Use%20Only-red)
 ![Coverage](https://img.shields.io/badge/Coverage-Standards%20%2B%20Suites%20%2B%20Advanced-success)
 
 </div>
