@@ -2,7 +2,7 @@
 
 <div align="center">
 
-# 🔐 API Security Tester
+### 🔐 API Security Tester
 
 ### Standards-Aligned • Route-Aware • Protocol-Level API Security Validation
 
