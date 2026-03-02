@@ -35,8 +35,7 @@ It combines:
 - 🧬 CVE corpus correlation  
 - 🧪 Advanced protocol abuse detection  
 
-This is not just a scanner.  
-It is a multi-domain API validation framework.
+This is not just a scanner. It is a multi-domain API validation framework.
 
 ---
 
