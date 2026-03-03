@@ -24,7 +24,7 @@
 
 ---
 
-## 🧠 What This Is
+## 📖 What This Is
 
 **API Security Tester** is a .NET MAUI application built by Codex for structured, standards-aligned API security validation.
 
