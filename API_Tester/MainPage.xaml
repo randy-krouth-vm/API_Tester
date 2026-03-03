@@ -121,7 +121,7 @@
     </ContentPage.Resources>
 
     <ScrollView x:Name="MainScrollView" VerticalScrollBarVisibility="Always">
-        <VerticalStackLayout Padding="18" Spacing="12">
+        <VerticalStackLayout Padding="18, 18, 18, 7" Spacing="12">
             <Border x:Name="TopSectionAnchor"
                     BackgroundColor="{StaticResource CardBackground}"
                     Stroke="{StaticResource CardBorder}"
