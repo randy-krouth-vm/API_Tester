@@ -1,0 +1,13 @@
+﻿{
+  "scenarios": [
+    {
+      "name": "DVWA low security starter",
+      "targetUrl": "http://localhost/dvwa/vulnerabilities/sqli/",
+      "authProfile": "Run without credentials",
+      "testKeys": ["SQLI", "XSS", "CMDINJ", "PATHTRAV"],
+      "expectedFailKeys": ["SQLI", "XSS", "CMDINJ"],
+      "expectedPassKeys": [],
+      "expectedInconclusiveKeys": ["PATHTRAV"]
+    }
+  ]
+}

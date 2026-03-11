@@ -1,0 +1,46 @@
+# Build outputs (all projects, all targets)
+**/bin/
+**/obj/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+
+# Local .NET / NuGet caches
+.dotnet_cli/
+.dotnet_cli_home/
+cache/.dotnet/
+cache/.templateengine/
+cache/dotnet/
+cache/cve-corpus.ndjson
+cache/cve-corpus.meta.json
+cache/cve-function-map.ndjson
+cache/cve-function-map.meta.json
+cache/
+.nuget/
+*.nupkg
+**/.dotnet_cli/
+**/.nuget/
+**/.dotnet_cli_home/
+**/.dotnet_cli/
+**/.dotnet_cli_home/
+**/cache/.dotnet/
+**/cache/.templateengine/
+**/cache/dotnet/
+**/cache/cve-corpus.ndjson
+**/cache/cve-corpus.meta.json
+**/cache/cve-function-map.ndjson
+**/cache/cve-function-map.meta.json
+**/cache/
+**/.nuget/
+
+# Logs
+cache/logs/*.txt
+**/cache/logs/*.txt

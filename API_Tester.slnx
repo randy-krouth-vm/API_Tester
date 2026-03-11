@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="API_Tester.Core/API_Tester.Core.csproj" />
+  <Project Path="API_Tester.Headless/API_Tester.Headless.csproj" />
+  <Project Path="API_Tester/API_Tester.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>

@@ -1,0 +1,22 @@
+﻿{
+  "scenarios": [
+    {
+      "name": "crAPI unauth baseline",
+      "targetUrl": "http://localhost:8888",
+      "authProfile": "Run without credentials",
+      "testKeys": ["API1", "API2", "API5", "SQLI", "XSS", "SSRF", "FORCEDBROWSE"],
+      "expectedFailKeys": ["API1", "API5", "FORCEDBROWSE"],
+      "expectedPassKeys": ["API2"],
+      "expectedInconclusiveKeys": ["SQLI", "XSS", "SSRF"]
+    },
+    {
+      "name": "crAPI user profile checks",
+      "targetUrl": "http://localhost:8888",
+      "authProfile": "User credentials",
+      "testKeys": ["API1", "API5", "OAUTHSCOPE", "JWTMALFORMED"],
+      "expectedFailKeys": ["API1", "API5"],
+      "expectedPassKeys": [],
+      "expectedInconclusiveKeys": ["OAUTHSCOPE", "JWTMALFORMED"]
+    }
+  ]
+}

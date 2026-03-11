@@ -1,0 +1,59 @@
+﻿{
+  "Target": "http://127.0.0.1:5006/",
+  "Scope": "single",
+  "Framework": "(all)",
+  "StartedUtc": "2026-03-08T11:07:05.5469895Z",
+  "FinishedUtc": "2026-03-08T11:07:19.9187438Z",
+  "TargetsScanned": 1,
+  "Findings": [
+    {
+      "TestKey": "HEADERS",
+      "TestName": "Security Headers",
+      "Target": "http://127.0.0.1:5006/",
+      "Verdict": "inconclusive",
+      "Summary": "No response."
+    },
+    {
+      "TestKey": "CORS",
+      "TestName": "CORS Misconfiguration",
+      "Target": "http://127.0.0.1:5006/",
+      "Verdict": "inconclusive",
+      "Summary": "No response."
+    },
+    {
+      "TestKey": "METHODS",
+      "TestName": "HTTP Method Abuse",
+      "Target": "http://127.0.0.1:5006/",
+      "Verdict": "pass",
+      "Summary": "TRACE not accepted."
+    },
+    {
+      "TestKey": "SQLI",
+      "TestName": "SQL Injection",
+      "Target": "http://127.0.0.1:5006/",
+      "Verdict": "inconclusive",
+      "Summary": "No response."
+    },
+    {
+      "TestKey": "XSS",
+      "TestName": "Reflected XSS",
+      "Target": "http://127.0.0.1:5006/",
+      "Verdict": "inconclusive",
+      "Summary": "No response."
+    },
+    {
+      "TestKey": "SSRF",
+      "TestName": "SSRF",
+      "Target": "http://127.0.0.1:5006/",
+      "Verdict": "inconclusive",
+      "Summary": "No response."
+    },
+    {
+      "TestKey": "RATELIMIT",
+      "TestName": "Rate Limit",
+      "Target": "http://127.0.0.1:5006/",
+      "Verdict": "inconclusive",
+      "Summary": "No responses."
+    }
+  ]
+}

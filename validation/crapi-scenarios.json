@@ -1,0 +1,13 @@
+﻿{
+  "scenarios": [
+    {
+      "name": "crAPI unauth starter",
+      "targetUrl": "http://localhost:8888",
+      "authProfile": "Run without credentials",
+      "testKeys": ["API1", "API2", "API5", "FORCEDBROWSE", "SQLI", "XSS", "SSRF"],
+      "expectedFailKeys": ["API1", "API5", "FORCEDBROWSE"],
+      "expectedPassKeys": [],
+      "expectedInconclusiveKeys": ["API2", "SQLI", "XSS", "SSRF"]
+    }
+  ]
+}

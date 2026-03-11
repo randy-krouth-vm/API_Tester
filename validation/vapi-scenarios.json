@@ -1,0 +1,13 @@
+﻿{
+  "scenarios": [
+    {
+      "name": "vAPI unauth starter",
+      "targetUrl": "http://localhost:8080",
+      "authProfile": "Run without credentials",
+      "testKeys": ["API1", "API3", "API5", "PARAMPOLLUTION", "TYPECONF", "SQLI", "XSS"],
+      "expectedFailKeys": ["API1", "API3", "API5"],
+      "expectedPassKeys": [],
+      "expectedInconclusiveKeys": ["PARAMPOLLUTION", "TYPECONF", "SQLI", "XSS"]
+    }
+  ]
+}

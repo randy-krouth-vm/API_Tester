@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ApiTester.Core</RootNamespace>
+    <AssemblyName>API_Tester.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="MainPageLogicSource.cs" />
+    <None Include="MainPageLogicSource.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="ApiTester.Core" />
+    <Using Include="ApiTester.Shared" />
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Net" />
+    <Using Include="System.Net.Http" />
+    <Using Include="System.Net.Security" />
+    <Using Include="System.Net.Sockets" />
+    <Using Include="System.Security.Cryptography.X509Certificates" />
+    <Using Include="System.Text" />
+    <Using Include="System.Text.Json" />
+    <Using Include="System.Text.RegularExpressions" />
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+
+</Project>

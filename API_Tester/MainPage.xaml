@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="API_Tester.MainPage"
+             Title="API Security Tester">
+
+    <Shell.TitleView>
+        <Border Padding="4,4"
+                HorizontalOptions="Fill"
+                Stroke="#BFD3D9"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 6">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                    <GradientStop Color="#EAF4F3" Offset="0.0" />
+                    <GradientStop Color="#E4EDF7" Offset="0.55" />
+                    <GradientStop Color="#EEF1E8" Offset="1.0" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <Grid ColumnDefinitions="Auto,*"
+                  ColumnSpacing="12"
+                  HorizontalOptions="Fill">
+                <Label Grid.Column="0"
+                       Text="API Security Tester"
+                       FontFamily="OpenSansSemibold"
+                       FontSize="22"
+                       VerticalOptions="Center"
+                       TextColor="#0F172A"
+                       Margin="12,0,0,0" />
+                <ScrollView Grid.Column="1"
+                            Orientation="Horizontal"
+                            HorizontalScrollBarVisibility="Never"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="8" Margin="0,0,10,0">
+                        <Button x:Name="NavTopButton" Text="Top" Clicked="OnNavigateSectionClicked" CommandParameter="top" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavTargetButton" Text="Target" Clicked="OnNavigateSectionClicked" CommandParameter="target" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavTestsButton" Text="Tests" Clicked="OnNavigateSectionClicked" CommandParameter="tests" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavAppStandardsButton" Text="App Standards" Clicked="OnNavigateSectionClicked" CommandParameter="app-standards" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavUsFederalButton" Text="U.S. Federal" Clicked="OnNavigateSectionClicked" CommandParameter="us-federal" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavInternationalButton" Text="International" Clicked="OnNavigateSectionClicked" CommandParameter="international" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavCloudInfraButton" Text="Cloud/Infra" Clicked="OnNavigateSectionClicked" CommandParameter="cloud-infra" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavRunAllButton" Text="Run" Clicked="OnNavigateSectionClicked" CommandParameter="run" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavCveButton" Text="CVE" Clicked="OnNavigateSectionClicked" CommandParameter="cve" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavResultsButton" Text="Results" Clicked="OnNavigateSectionClicked" CommandParameter="results" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavFindButton" Text="Find" Clicked="OnFindInResultsClicked" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                        <Button x:Name="NavBottomButton" Text="Bottom" Clicked="OnNavigateSectionClicked" CommandParameter="bottom" Padding="10,6" FontSize="12" HeightRequest="32" CornerRadius="4" Margin="0,2" />
+                    </HorizontalStackLayout>
+                </ScrollView>
+            </Grid>
+        </Border>
+    </Shell.TitleView>
+
+    <ContentPage.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#EEF7F5" Offset="0.0" />
+            <GradientStop Color="#E6EEF9" Offset="0.45" />
+            <GradientStop Color="#F8F5EC" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Background>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="CardBackground">#FDFEFE</Color>
+            <Color x:Key="CardBorder">#D7E2E6</Color>
+            <Color x:Key="PrimaryButton">#0D9488</Color>
+            <Color x:Key="SecondaryButton">#6B7280</Color>
+            <Color x:Key="SurfaceText">#0F172A</Color>
+            <Color x:Key="MutedText">#475569</Color>
+
+            <Style TargetType="Label">
+                <Setter Property="TextColor" Value="{StaticResource SurfaceText}" />
+                <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            </Style>
+
+            <Style TargetType="Entry">
+                <Setter Property="BackgroundColor" Value="#FFFFFF" />
+                <Setter Property="TextColor" Value="{StaticResource SurfaceText}" />
+                <Setter Property="PlaceholderColor" Value="#94A3B8" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="HeightRequest" Value="44" />
+            </Style>
+
+            <Style TargetType="Picker">
+                <Setter Property="BackgroundColor" Value="#FFFFFF" />
+                <Setter Property="TextColor" Value="#94A3B8" />
+                <Setter Property="TitleColor" Value="#94A3B8" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="HeightRequest" Value="44" />
+            </Style>
+
+            <Style TargetType="Editor">
+                <Setter Property="TextColor" Value="{StaticResource SurfaceText}" />
+                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="BackgroundColor" Value="#FFFFFF" />
+            </Style>
+
+            <Style TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource SecondaryButton}" />
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="Padding" Value="16,12" />
+                <Setter Property="FontFamily" Value="OpenSansSemibold" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="BorderWidth" Value="0" />
+                <Setter Property="VisualStateManager.VisualStateGroups">
+                    <VisualStateGroupList>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="Pressed">
+                                <VisualState.Setters>
+                                    <Setter Property="Opacity" Value="0.85" />
+                                    <Setter Property="Scale" Value="0.99" />
+                                </VisualState.Setters>
+                            </VisualState>
+                        </VisualStateGroup>
+                    </VisualStateGroupList>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ScrollView x:Name="MainScrollView" VerticalScrollBarVisibility="Always">
+        <VerticalStackLayout Padding="18" Spacing="12">
+            <Border x:Name="TopSectionAnchor"
+                    BackgroundColor="{StaticResource CardBackground}"
+                    Stroke="{StaticResource CardBorder}"
+                    StrokeThickness="1"
+                    Padding="16"
+                    StrokeShape="RoundRectangle 18">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="API Security Tester"
+                           FontSize="44"
+                           HorizontalOptions="Center"
+                           TextColor="#0B3A5A"
+                           SemanticProperties.HeadingLevel="Level1" />
+                    <Label Text="Framework-driven API hardening, validation, and compliance checks"
+                           HorizontalOptions="Center"
+                           FontFamily="OpenSansRegular"
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label x:Name="TargetSectionAnchor" Text="Target URL" FontAttributes="Bold" />
+            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                <ActivityIndicator x:Name="BusyIndicator"
+                                   IsVisible="False"
+                                   IsRunning="False"
+                                   Color="#0F766E"
+                                   WidthRequest="20"
+                                   HeightRequest="20" />
+                <Label x:Name="BusyLabel"
+                       IsVisible="False"
+                       Text="Working..."
+                       FontFamily="OpenSansRegular"
+                       TextColor="#334155" />
+            </HorizontalStackLayout>
+            <Border BackgroundColor="{StaticResource CardBackground}"
+                    Stroke="{StaticResource CardBorder}"
+                    StrokeThickness="1"
+                    Padding="12"
+                    StrokeShape="RoundRectangle 16">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,180,180" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="8">
+                        <Entry Grid.Column="0"
+                               x:Name="UrlEntry"
+                               Placeholder="https://api.example.com/product/{id}"
+                               Keyboard="Url"
+                               ClearButtonVisibility="WhileEditing" />
+                        <Picker Grid.Column="1"
+                                x:Name="RunScopePicker">
+                            <Picker.Items>
+                                <x:String>Run Scope</x:String>
+                                <x:String>Single Target Only</x:String>
+                                <x:String>Spider Routes (All Discovered)</x:String>
+                                <x:String>OpenAPI Routes (From Spec)</x:String>
+                            </Picker.Items>
+                        </Picker>
+                        <Picker Grid.Row="0"
+                                Grid.Column="2"
+                                x:Name="TypeAwareModePicker">
+                            <Picker.Items>
+                                <x:String>Automatic (Type-Aware)</x:String>
+                                <x:String>GET</x:String>
+                                <x:String>POST</x:String>
+                                <x:String>PUT</x:String>
+                                <x:String>PATCH</x:String>
+                                <x:String>DELETE</x:String>
+                                <x:String>HEAD</x:String>
+                                <x:String>OPTIONS</x:String>
+                            </Picker.Items>
+                        </Picker>
+                        <Entry Grid.Row="1"
+                               Grid.Column="0"
+                               Grid.ColumnSpan="1"
+                               x:Name="OpenApiInputEntry"
+                               Placeholder="Optional OpenAPI input (URL or path, e.g. /openapi.json or https://host/swagger/v1/swagger.json)" />
+                        <Picker Grid.Row="1"
+                                Grid.Column="1"
+                                x:Name="PayloadLocationPicker">
+                            <Picker.Items>
+                                <x:String>Auto</x:String>
+                                <x:String>Query</x:String>
+                                <x:String>Path</x:String>
+                                <x:String>Body</x:String>
+                                <x:String>Header</x:String>
+                                <x:String>Cookie</x:String>
+                            </Picker.Items>
+                        </Picker>
+                        <Button Grid.Row="1"
+                                Grid.Column="2"
+                                Text="Load OpenAPI File"
+                                HeightRequest="44"
+                                CornerRadius="13"
+                                Clicked="OnPickOpenApiFileClicked" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto" RowSpacing="8">
+                        <Button Grid.Column="0"
+                                Text="Spider Site + Coverage"
+                                Clicked="OnSpiderSiteClicked"
+                                BackgroundColor="#0F766E"
+                                TextColor="White" />
+                        <Button Grid.Column="1"
+                                Text="Run Maximum Static + Dynamic Coverage"
+                                Clicked="OnRunMaxCoverageClicked"
+                                BackgroundColor="#0F766E"
+                                TextColor="White" />
+                    </Grid>
+                    <Grid IsVisible="False"
+                          HeightRequest="0"
+                          Opacity="0">
+                        <Entry x:Name="SingleTargetQueryEntry" />
+                        <Editor x:Name="SingleTargetBodyEditor" />
+                    </Grid>
+                    <Border BackgroundColor="#F8FAFC"
+                            Stroke="#D7E2E6"
+                            StrokeThickness="1"
+                            Padding="10"
+                            StrokeShape="RoundRectangle 12">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Auth Profiles &amp; Baseline" FontAttributes="Bold" />
+                            <Grid ColumnDefinitions="Auto,20,*,110,Auto"
+                                  ColumnSpacing="0"
+                                  RowDefinitions="Auto">
+                                <HorizontalStackLayout Grid.Column="0"
+                                                       Spacing="8"
+                                                       HorizontalOptions="Start"
+                                                       VerticalOptions="Center">
+                                    <Label Text="Role Matrix" VerticalOptions="Center"/>
+                                    <Switch x:Name="RoleMatrixSwitch"
+                                            IsToggled="False"
+                                            HorizontalOptions="Start"
+                                            VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+
+                                <Picker Grid.Column="2"
+                                        x:Name="DefaultAuthProfilePicker"
+                                        HorizontalOptions="Fill"
+                                        Margin="0,0,0,0">
+                                    <Picker.Items>
+                                        <x:String>Run without credentials</x:String>
+                                        <x:String>User credentials</x:String>
+                                        <x:String>Admin credentials</x:String>
+                                    </Picker.Items>
+                                </Picker>
+
+                                <HorizontalStackLayout Grid.Column="4"
+                                                       Spacing="8"
+                                                       HorizontalOptions="Start"
+                                                       VerticalOptions="Center">
+                                    <Label Text="Request Delay (ms)" VerticalOptions="Center" />
+                                    <Entry x:Name="RequestDelayMsEntry"
+                                           Text="0"
+                                           Keyboard="Numeric"
+                                           Placeholder="0"
+                                           WidthRequest="140"
+                                           HorizontalTextAlignment="End"
+                                           VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
+                                <Entry Grid.Row="0" Grid.Column="0" x:Name="UserBearerEntry" Placeholder="User bearer token" />
+                                <Entry Grid.Row="0" Grid.Column="1" x:Name="AdminBearerEntry" Placeholder="Admin bearer token" />
+                                <Entry Grid.Row="1" Grid.Column="0" x:Name="UserApiKeyEntry" Placeholder="User API key" />
+                                <Entry Grid.Row="1" Grid.Column="1" x:Name="AdminApiKeyEntry" Placeholder="Admin API key" />
+                                <Entry Grid.Row="2" Grid.Column="0" x:Name="UserCookieEntry" Placeholder="User cookie header" />
+                                <Entry Grid.Row="2" Grid.Column="1" x:Name="AdminCookieEntry" Placeholder="Admin cookie header" />
+                                <Entry Grid.Row="3" Grid.Column="0" x:Name="UserExtraHeadersEntry" Placeholder="User extra headers (X-Key:val; X-Env:prod)" />
+                                <Entry Grid.Row="3" Grid.Column="1" x:Name="AdminExtraHeadersEntry" Placeholder="Admin extra headers (X-Key:val; X-Env:prod)" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" RowDefinitions="Auto">
+                                <Picker Grid.Column="0" x:Name="BaselineRunPicker" />
+                                <Button Grid.Column="1" Text="Refresh Baselines" Clicked="OnRefreshBaselinesClicked" BackgroundColor="#6B7280" TextColor="White" />
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" RowDefinitions="Auto">
+                                <Label Grid.Column="0" Text="Manual Payload Mode" VerticalOptions="Center" />
+                                <Switch Grid.Column="1" x:Name="ManualPayloadModeSwitch" IsToggled="False" HorizontalOptions="Start" />
+                            </Grid>
+                            <Editor x:Name="ManualPayloadsEditor"
+                                    AutoSize="TextChanges"
+                                    HeightRequest="96"
+                                    Placeholder="Manual payloads (one per line). Prefix with xss://, ssrf://, redirect://, sql://, nosql://, cmd://, path://, or generic://.&#10;Use override: https://host/path to run a direct request. Scheme variants follow the target/spec base: http stays http, https stays https." />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label x:Name="IndividualTestsSectionAnchor" Text="Individual Security Tests" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="8" RowDefinitions="Auto,Auto,Auto">
+                <Button Grid.Row="0" Grid.Column="0" Text="Test SSRF" Clicked="OnTestSsrfClicked" />
+                <Button Grid.Row="0" Grid.Column="1" Text="Test XSS" Clicked="OnTestXssClicked" />
+                <Button Grid.Row="1" Grid.Column="0" Text="Test SQLi" Clicked="OnTestSqliClicked" />
+                <Button Grid.Row="1" Grid.Column="1" Text="Test Headers" Clicked="OnTestHeadersClicked" />
+                <Button Grid.Row="2" Grid.Column="0" Text="Test CORS" Clicked="OnTestCorsClicked" />
+                <Button Grid.Row="2" Grid.Column="1" Text="Test Methods" Clicked="OnTestMethodsClicked" />
+            </Grid>
+
+            <Label x:Name="AppStandardsSectionAnchor" Text="Application &amp; API-Specific Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label Text="OWASP API Security Top 10" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                <Button Grid.Row="0" Grid.Column="0" Text="API1: BOLA" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API1" />
+                <Button Grid.Row="0" Grid.Column="1" Text="API2: Broken Authentication" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API2" />
+                <Button Grid.Row="1" Grid.Column="0" Text="API3: Broken Object Property Level Auth" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API3" />
+                <Button Grid.Row="1" Grid.Column="1" Text="API4: Unrestricted Resource Consumption" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API4" />
+                <Button Grid.Row="2" Grid.Column="0" Text="API5: Broken Function Level Authorization" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API5" />
+                <Button Grid.Row="2" Grid.Column="1" Text="API6: Unrestricted Access to Sensitive Business Flows" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API6" />
+                <Button Grid.Row="3" Grid.Column="0" Text="API7: SSRF" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API7" />
+                <Button Grid.Row="3" Grid.Column="1" Text="API8: Security Misconfiguration" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API8" />
+                <Button Grid.Row="4" Grid.Column="0" Text="API9: Improper Inventory Management" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API9" />
+                <Button Grid.Row="4" Grid.Column="1" Text="API10: Unsafe Consumption of APIs" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP API Security Top 10|API10" />
+            </Grid>
+            <Label Text="OWASP ASVS" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                <Button Grid.Row="0" Grid.Column="0" Text="V2 Authentication Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV2" />
+                <Button Grid.Row="0" Grid.Column="1" Text="V3 Session Management Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV3" />
+                <Button Grid.Row="1" Grid.Column="0" Text="V4 Access Control Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV4" />
+                <Button Grid.Row="1" Grid.Column="1" Text="V5 Validation/Sanitization Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV5" />
+                <Button Grid.Row="2" Grid.Column="0" Text="V6 Stored Cryptography Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV6" />
+                <Button Grid.Row="2" Grid.Column="1" Text="V7 Error Handling &amp; Logging Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV7" />
+                <Button Grid.Row="3" Grid.Column="0" Text="V8 Data Protection Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV8" />
+                <Button Grid.Row="3" Grid.Column="1" Text="V9 Communications Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV9" />
+                <Button Grid.Row="4" Grid.Column="0" Text="V13 API/Web Service Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV13" />
+                <Button Grid.Row="4" Grid.Column="1" Text="V14 Config/HTTP Security Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP ASVS|ASVSV14" />
+            </Grid>
+            <Label Text="OWASP MASVS" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Grid.Row="0" Grid.Column="0" Text="MASVS-AUTH" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP MASVS|MASVSAUTH" />
+                <Button Grid.Row="0" Grid.Column="1" Text="MASVS-NETWORK" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP MASVS|MASVSNETWORK" />
+                <Button Grid.Row="1" Grid.Column="0" Text="MASVS-STORAGE/PRIVACY" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP MASVS|MASVSSTORAGE" />
+            </Grid>
+            <Label Text="Cloud Security Alliance API Security guidance" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Grid.Row="0" Grid.Column="0" Text="Identity &amp; Access Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance API Security guidance|CSAAPIIAM" />
+                <Button Grid.Row="0" Grid.Column="1" Text="API Input/Injection Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance API Security guidance|CSAAPIINJ" />
+                <Button Grid.Row="1" Grid.Column="0" Text="Transport/Configuration Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance API Security guidance|CSAAPITRANS" />
+            </Grid>
+
+            <Label x:Name="UsFederalSectionAnchor" Text="U.S. Federal / Government Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label Text="NIST SP 800-53" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <Button Text="AC-2 Account Management" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53AC2" />
+                <Button Grid.Column="1" Text="AC-3 Access Enforcement" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53AC3" />
+                <Button Grid.Row="1" Text="AC-6 Least Privilege" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53AC6" />
+                <Button Grid.Row="1" Grid.Column="1" Text="IA-2 Identification &amp; Authentication" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53IA2" />
+                <Button Grid.Row="2" Text="IA-5 Authenticator Management" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53IA5" />
+                <Button Grid.Row="2" Grid.Column="1" Text="SC-5 Denial of Service Protection" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53SC5" />
+                <Button Grid.Row="3" Text="SC-7 Boundary Protection" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53SC7" />
+                <Button Grid.Row="3" Grid.Column="1" Text="SC-8 Transmission Confidentiality/Integrity" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53SC8" />
+                <Button Grid.Row="4" Text="SC-23 Session Authenticity" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53SC23" />
+                <Button Grid.Row="4" Grid.Column="1" Text="SI-10 Information Input Validation" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53SI10" />
+                <Button Grid.Row="5" Text="AU-2 Event Logging" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53AU2" />
+                <Button Grid.Row="5" Grid.Column="1" Text="AU-9 Audit Protection" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53AU9" />
+                <Button Grid.Row="6" Text="AU-12 Audit Generation" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53AU12" />
+                <Button Grid.Row="6" Grid.Column="1" Text="CM-6 Configuration Settings" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53CM6" />
+                <Button Grid.Row="7" Text="CM-7 Least Functionality" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53CM7" />
+                <Button Grid.Row="7" Grid.Column="1" Text="SA-11 Developer Security Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53SA11" />
+                <Button Grid.Row="8" Text="IR-6 Incident Reporting" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53IR6" />
+                <Button Grid.Row="8" Grid.Column="1" Text="RA-5 Vulnerability Monitoring/Scanning" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-53|N53RA5" />
+            </Grid>
+            <Label Text="NIST SP 800-61" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="Detection and Analysis" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-61|N61DETECT" />
+                <Button Grid.Column="1" Text="Containment Strategy Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-61|N61CONTAIN" />
+                <Button Grid.Row="1" Text="Eradication Indicators" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-61|N61ERADICATE" />
+                <Button Grid.Row="1" Grid.Column="1" Text="Recovery/Reoccurrence Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-61|N61RECOVER" />
+            </Grid>
+            <Label Text="NIST SP 800-63" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="AAL Session/Auth Strength Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-63|N63AAL" />
+                <Button Grid.Column="1" Text="Replay Resistance Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-63|N63REPLAY" />
+                <Button Grid.Row="1" Text="Token/Session Binding Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-63|N63SESSION" />
+            </Grid>
+            <Label Text="NIST SP 800-207" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="Continuous Verification Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-207|N207VERIFY" />
+                <Button Grid.Column="1" Text="Least Privilege Enforcement" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-207|N207LEAST" />
+                <Button Grid.Row="1" Text="Policy Enforcement Boundary Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-207|N207POLICY" />
+            </Grid>
+            <Label Text="NIST SP 800-190" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="Container Network Boundary Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-190|N190NETWORK" />
+                <Button Grid.Column="1" Text="Runtime Interface Exposure Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-190|N190RUNTIME" />
+                <Button Grid.Row="1" Text="Secrets/Metadata Exposure Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-190|N190SECRETS" />
+            </Grid>
+            <Label Text="NIST SP 800-171" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="3.1 Access Control" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-171|N171AC" />
+                <Button Grid.Column="1" Text="3.5 Identification &amp; Authentication" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-171|N171IA" />
+                <Button Grid.Row="1" Text="3.13 System/Comms Protection" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-171|N171SC" />
+                <Button Grid.Row="1" Grid.Column="1" Text="3.14 System/Info Integrity" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-171|N171SI" />
+            </Grid>
+            <Label Text="FedRAMP" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="AC Access Control Baseline" Clicked="OnRunFrameworkTestClicked" CommandParameter="FedRAMP|FEDRAMPAC" />
+                <Button Grid.Column="1" Text="AU Audit/Accountability Baseline" Clicked="OnRunFrameworkTestClicked" CommandParameter="FedRAMP|FEDRAMPAU" />
+                <Button Grid.Row="1" Text="SC System/Comms Protection Baseline" Clicked="OnRunFrameworkTestClicked" CommandParameter="FedRAMP|FEDRAMPSC" />
+                <Button Grid.Row="1" Grid.Column="1" Text="SI System/Info Integrity Baseline" Clicked="OnRunFrameworkTestClicked" CommandParameter="FedRAMP|FEDRAMPSI" />
+            </Grid>
+            <Label Text="DISA STIG/SRG" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="Authentication &amp; Account Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="DISA STIG/SRG|STIGAUTH" />
+                <Button Grid.Column="1" Text="Network/Boundary Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="DISA STIG/SRG|STIGNET" />
+                <Button Grid.Row="1" Text="Auditing Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="DISA STIG/SRG|STIGAUD" />
+                <Button Grid.Row="1" Grid.Column="1" Text="Configuration Hardening Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="DISA STIG/SRG|STIGCONF" />
+            </Grid>
+
+            <Label x:Name="InternationalSectionAnchor" Text="International Security Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label Text="ISO 27001" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="A.5 Organizational Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27001|ISO27001A5" />
+                <Button Grid.Column="1" Text="A.8 Technological Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27001|ISO27001A8" />
+            </Grid>
+            <Label Text="ISO 27002" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto">
+                <Button Text="8.20 Network Security" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27002|ISO27002820" />
+                <Button Grid.Column="1" Text="8.16 Monitoring Activities" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27002|ISO27002816" />
+                <Button Grid.Row="1" Text="8.22 Segregation of Networks" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27002|ISO27002822" />
+                <Button Grid.Row="1" Grid.Column="1" Text="8.24 Use of Cryptography" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27002|ISO27002824" />
+                <Button Grid.Row="2" Text="8.25 Secure Development Lifecycle" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27002|ISO27002825" />
+                <Button Grid.Row="2" Grid.Column="1" Text="8.26 Application Security Requirements" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27002|ISO27002826" />
+            </Grid>
+            <Label Text="ISO 27017" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="Cloud Shared Responsibility Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27017|ISO27017SHARED" />
+                <Button Grid.Column="1" Text="Virtual Network Security Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27017|ISO27017NETWORK" />
+            </Grid>
+            <Label Text="ISO 27018" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="PII Disclosure Prevention Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27018|ISO27018PII" />
+                <Button Grid.Column="1" Text="PII Processing Transparency Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27018|ISO27018PROCESS" />
+            </Grid>
+            <Label Text="ISO 27701" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="PIMS Controller Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27701|ISO27701CTRL" />
+                <Button Grid.Column="1" Text="PIMS Processor Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISO 27701|ISO27701PROC" />
+            </Grid>
+
+            <Label x:Name="CloudInfraSectionAnchor" Text="Cloud &amp; Infrastructure Security" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label Text="Cloud Security Alliance CCM" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="IAM Control Objectives" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance CCM|CCMIAM" />
+                <Button Grid.Column="1" Text="IVS Interface/Endpoint Security" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance CCM|CCMIVS" />
+            </Grid>
+            <Label Text="CIS Critical Security Controls" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="CIS Control 3 Data Protection" Clicked="OnRunFrameworkTestClicked" CommandParameter="CIS Critical Security Controls|CIS3" />
+                <Button Grid.Column="1" Text="CIS Control 16 Application Security" Clicked="OnRunFrameworkTestClicked" CommandParameter="CIS Critical Security Controls|CIS16" />
+            </Grid>
+            <Label Text="Center for Internet Security Kubernetes Benchmark" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="K8s API Surface Hardening" Clicked="OnRunFrameworkTestClicked" CommandParameter="Center for Internet Security Kubernetes Benchmark|CISK8SAPI" />
+                <Button Grid.Column="1" Text="K8s Secrets Protection" Clicked="OnRunFrameworkTestClicked" CommandParameter="Center for Internet Security Kubernetes Benchmark|CISK8SSECRETS" />
+            </Grid>
+            <Label Text="MITRE ATT&amp;CK Framework" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto,Auto">
+                <Button Text="T1190 Exploit Public-Facing App" Clicked="OnRunFrameworkTestClicked" CommandParameter="MITRE ATT&amp;CK Framework|MITRET1190" />
+                <Button Grid.Column="1" Text="T1078 Valid Accounts Abuse" Clicked="OnRunFrameworkTestClicked" CommandParameter="MITRE ATT&amp;CK Framework|MITRET1078" />
+                <Button Grid.Row="1" Text="T1550.001 Application Access Token Abuse" Clicked="OnRunFrameworkTestClicked" CommandParameter="MITRE ATT&amp;CK Framework|MITRET1550001" />
+                <Button Grid.Row="1" Grid.Column="1" Text="T1110 Brute Force" Clicked="OnRunFrameworkTestClicked" CommandParameter="MITRE ATT&amp;CK Framework|MITRET1110" />
+                <Button Grid.Row="2" Text="T1059 Command/Scripting Injection" Clicked="OnRunFrameworkTestClicked" CommandParameter="MITRE ATT&amp;CK Framework|MITRET1059" />
+                <Button Grid.Row="2" Grid.Column="1" Text="T1552.001 Credentials in Files" Clicked="OnRunFrameworkTestClicked" CommandParameter="MITRE ATT&amp;CK Framework|MITRET1552001" />
+                <Button Grid.Row="3" Text="T1071.001 Web Protocols Abuse" Clicked="OnRunFrameworkTestClicked" CommandParameter="MITRE ATT&amp;CK Framework|MITRET1071001" />
+            </Grid>
+
+            <Label Text="Industry &amp; Regulatory Frameworks" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label Text="PCI DSS" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="Req 4 Encrypt Transmission of CHD" Clicked="OnRunFrameworkTestClicked" CommandParameter="PCI DSS|PCIDSS4" />
+                <Button Grid.Column="1" Text="Req 6 Secure Systems &amp; Software" Clicked="OnRunFrameworkTestClicked" CommandParameter="PCI DSS|PCIDSS6" />
+                <Button Grid.Row="1" Text="Req 8 Identify/Authenticate Access" Clicked="OnRunFrameworkTestClicked" CommandParameter="PCI DSS|PCIDSS8" />
+                <Button Grid.Row="1" Grid.Column="1" Text="Req 10 Logging &amp; Monitoring" Clicked="OnRunFrameworkTestClicked" CommandParameter="PCI DSS|PCIDSS10" />
+                <Button Grid.Row="2" Text="Req 11 Security Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="PCI DSS|PCIDSS11" />
+            </Grid>
+            <Label Text="FFIEC guidance" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="CAT Authentication Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="FFIEC guidance|FFIECAUTH" />
+                <Button Grid.Column="1" Text="DDoS/Resilience Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="FFIEC guidance|FFIECDDOS" />
+                <Button Grid.Row="1" Text="Logging &amp; Monitoring Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="FFIEC guidance|FFIECLOG" />
+            </Grid>
+            <Label Text="HIPAA Security Rule" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="164.312(a) Access Control" Clicked="OnRunFrameworkTestClicked" CommandParameter="HIPAA Security Rule|HIPAA312A" />
+                <Button Grid.Column="1" Text="164.312(c) Integrity" Clicked="OnRunFrameworkTestClicked" CommandParameter="HIPAA Security Rule|HIPAA312C" />
+                <Button Grid.Row="1" Text="164.312(e) Transmission Security" Clicked="OnRunFrameworkTestClicked" CommandParameter="HIPAA Security Rule|HIPAA312E" />
+            </Grid>
+            <Label Text="GDPR" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="Art.5 Data Minimization/Confidentiality" Clicked="OnRunFrameworkTestClicked" CommandParameter="GDPR|GDPRART5" />
+                <Button Grid.Column="1" Text="Art.25 Privacy by Design" Clicked="OnRunFrameworkTestClicked" CommandParameter="GDPR|GDPRART25" />
+                <Button Grid.Row="1" Text="Art.32 Security of Processing" Clicked="OnRunFrameworkTestClicked" CommandParameter="GDPR|GDPRART32" />
+            </Grid>
+            <Label Text="CCPA" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="1798.150 Reasonable Security" Clicked="OnRunFrameworkTestClicked" CommandParameter="CCPA|CCPA150" />
+                <Button Grid.Column="1" Text="PI Disclosure Limitation Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="CCPA|CCPAPRIV" />
+            </Grid>
+            <Label Text="CMMC" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="AC Access Control Practices" Clicked="OnRunFrameworkTestClicked" CommandParameter="CMMC|CMMCAC" />
+                <Button Grid.Column="1" Text="IA Identification &amp; Authentication" Clicked="OnRunFrameworkTestClicked" CommandParameter="CMMC|CMMCIA" />
+                <Button Grid.Row="1" Text="SI System &amp; Info Integrity" Clicked="OnRunFrameworkTestClicked" CommandParameter="CMMC|CMMCSI" />
+            </Grid>
+            <Label Text="SOC 2" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="CC6 Logical/Physical Access Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="SOC 2|SOC2CC6" />
+                <Button Grid.Column="1" Text="CC7 System Operations" Clicked="OnRunFrameworkTestClicked" CommandParameter="SOC 2|SOC2CC7" />
+                <Button Grid.Row="1" Text="CC8 Change Management" Clicked="OnRunFrameworkTestClicked" CommandParameter="SOC 2|SOC2CC8" />
+            </Grid>
+
+            <Label Text="Testing &amp; Assurance Standards" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label Text="OWASP Testing Guide" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="WSTG-ATHN Authentication Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP Testing Guide|WSTGATHN" />
+                <Button Grid.Column="1" Text="WSTG-INPV Input Validation Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP Testing Guide|WSTGINPV" />
+                <Button Grid.Row="1" Text="WSTG-CONF Configuration Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP Testing Guide|WSTGCONF" />
+                <Button Grid.Row="1" Grid.Column="1" Text="WSTG-BUSL Business Logic Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP Testing Guide|WSTGBUSL" />
+            </Grid>
+            <Label Text="NIST SP 800-115" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="Planning &amp; Discovery" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-115|N115PLAN" />
+                <Button Grid.Column="1" Text="Execution &amp; Technical Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-115|N115EXEC" />
+                <Button Grid.Row="1" Text="Analysis &amp; Reporting" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST SP 800-115|N115REPORT" />
+            </Grid>
+            <Label Text="CREST Penetration Testing standards" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="CREST Auth &amp; Session Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="CREST Penetration Testing standards|CRESTAUTH" />
+                <Button Grid.Column="1" Text="CREST Input/Injection Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="CREST Penetration Testing standards|CRESTINJ" />
+            </Grid>
+            <Label Text="ISACA COBIT" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="DSS05 Managed Security Services" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISACA COBIT|COBITDSS05" />
+                <Button Grid.Column="1" Text="MEA Monitoring &amp; Evaluation" Clicked="OnRunFrameworkTestClicked" CommandParameter="ISACA COBIT|COBITMEA" />
+            </Grid>
+
+            <Label Text="Architecture &amp; Zero Trust" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label Text="NIST Zero Trust (SP 800-207)" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="ZT Policy Decision Point Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST Zero Trust (SP 800-207)|ZT207PDP" />
+                <Button Grid.Column="1" Text="ZT Policy Enforcement Point Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST Zero Trust (SP 800-207)|ZT207PEP" />
+                <Button Grid.Row="1" Text="ZT Continuous Diagnostics &amp; Verification" Clicked="OnRunFrameworkTestClicked" CommandParameter="NIST Zero Trust (SP 800-207)|ZT207CDM" />
+            </Grid>
+            <Label Text="Cloud Security Alliance Zero Trust Guidance" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="CSA ZT Identity Pillar Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance Zero Trust Guidance|CSAZTIDENTITY" />
+                <Button Grid.Column="1" Text="CSA ZT Device/Workload Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="Cloud Security Alliance Zero Trust Guidance|CSAZTWORKLOAD" />
+            </Grid>
+            <Label Text="Gartner CARTA model" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="CARTA Adaptive Trust Evaluation" Clicked="OnRunFrameworkTestClicked" CommandParameter="Gartner CARTA model|CARTAADAPTIVE" />
+                <Button Grid.Column="1" Text="CARTA Continuous Risk Validation" Clicked="OnRunFrameworkTestClicked" CommandParameter="Gartner CARTA model|CARTARISK" />
+            </Grid>
+
+            <Label Text="Secure SDLC &amp; DevSecOps" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Label Text="OWASP SAMM" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="SAMM Verification Practice" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP SAMM|SAMMVERIFY" />
+                <Button Grid.Column="1" Text="SAMM Threat Assessment Practice" Clicked="OnRunFrameworkTestClicked" CommandParameter="OWASP SAMM|SAMMTHREAT" />
+            </Grid>
+            <Label Text="BSI Secure Development models" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="BSI Secure Coding Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="BSI Secure Development models|BSICODE" />
+                <Button Grid.Column="1" Text="BSI Security Testing Controls" Clicked="OnRunFrameworkTestClicked" CommandParameter="BSI Secure Development models|BSITEST" />
+            </Grid>
+            <Label Text="Microsoft SDL" FontAttributes="Bold" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto">
+                <Button Text="SDL Threat Modeling" Clicked="OnRunFrameworkTestClicked" CommandParameter="Microsoft SDL|SDLTHREAT" />
+                <Button Grid.Column="1" Text="SDL Security Verification Testing" Clicked="OnRunFrameworkTestClicked" CommandParameter="Microsoft SDL|SDLVERIFY" />
+            </Grid>
+
+            <Label Text="Defensive Technical Controls" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,10,0,6" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                <Button Text="DEF-01 Open Redirect Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OPENREDIRECT" />
+                <Button Grid.Column="1" Text="DEF-02 Path Traversal Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|PATHTRAV" />
+                <Button Grid.Row="1" Text="DEF-03 Host Header Injection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|HOSTHEADER" />
+                <Button Grid.Row="1" Grid.Column="1" Text="DEF-04 Cache Control Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|CACHE" />
+                <Button Grid.Row="2" Text="DEF-05 Cookie Security Flags Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|COOKIEFLAGS" />
+                <Button Grid.Row="2" Grid.Column="1" Text="DEF-06 JWT none-alg Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTNONE" />
+                <Button Grid.Row="3" Text="DEF-07 GraphQL Introspection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|GRAPHQL" />
+                <Button Grid.Row="3" Grid.Column="1" Text="DEF-08 Large Payload Abuse Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|LARGEPAYLOAD" />
+                <Button Grid.Row="4" Text="DEF-09 Content-Type Validation Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|CONTENTTYPE" />
+                <Button Grid.Row="4" Grid.Column="1" Text="DEF-10 Parameter Pollution Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|PARAMPOLLUTION" />
+                <Button Grid.Row="5" Text="DEF-11 Idempotency Replay Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|REPLAY" />
+                <Button Grid.Row="5" Grid.Column="1" Text="DEF-12 Verb Tampering Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|VERBTAMPER" />
+                <Button Grid.Row="6" Text="DEF-13 JWT Malformed Token Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTMALFORMED" />
+                <Button Grid.Row="6" Grid.Column="1" Text="DEF-14 JWT Expired Token Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTEXPIRED" />
+                <Button Grid.Row="7" Text="DEF-15 JWT Missing Claim Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTNOEXP" />
+                <Button Grid.Row="7" Grid.Column="1" Text="DEF-16 Token-in-Query Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|TOKENQUERY" />
+                <Button Grid.Row="8" Text="DEF-17 Token Parser Fuzz Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|TOKENFUZZ" />
+                <Button Grid.Row="8" Grid.Column="1" Text="DEF-18 OAuth Redirect URI Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OAUTHREDIRECT" />
+                <Button Grid.Row="9" Text="DEF-19 OAuth PKCE Enforcement Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OAUTHPKCE" />
+                <Button Grid.Row="9" Grid.Column="1" Text="DEF-20 OAuth Refresh Token Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OAUTHREFRESH" />
+                <Button Grid.Row="10" Text="DEF-21 OAuth Grant-Type Misuse Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OAUTHGRANT" />
+                <Button Grid.Row="10" Grid.Column="1" Text="DEF-22 OAuth Scope Escalation Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OAUTHSCOPE" />
+                <Button Grid.Row="11" Text="DEF-23 CRLF Injection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|CRLFINJECT" />
+                <Button Grid.Row="11" Grid.Column="1" Text="DEF-24 Header Override/Auth Bypass Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|HEADEROVERRIDE" />
+                <Button Grid.Row="12" Text="DEF-25 Duplicate Header Handling Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DUPHEADER" />
+                <Button Grid.Row="12" Grid.Column="1" Text="DEF-26 Method Override Tampering Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|METHODOVERRIDE" />
+                <Button Grid.Row="13" Text="DEF-27 Race Condition Replay Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|RACE" />
+                <Button Grid.Row="13" Grid.Column="1" Text="DEF-28 Deep JSON Nesting Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DEEPJSON" />
+                <Button Grid.Row="14" Text="DEF-29 Unicode Normalization Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|UNICODE" />
+                <Button Grid.Row="14" Grid.Column="1" Text="DEF-30 API Version Discovery Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|VERSIONDISCOVERY" />
+                <Button Grid.Row="15" Text="DEF-31 XXE Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|XXE" />
+                <Button Grid.Row="15" Grid.Column="1" Text="DEF-32 XML Entity Expansion Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|XMLENTITYDOS" />
+                <Button Grid.Row="16" Text="DEF-33 JSON Deserialization Abuse Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DESERIALJSON" />
+                <Button Grid.Row="16" Grid.Column="1" Text="DEF-34 Mass Assignment Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|MASSASSIGN" />
+                <Button Grid.Row="17" Text="DEF-35 SSTI Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|SSTI" />
+                <Button Grid.Row="17" Grid.Column="1" Text="DEF-36 Request Smuggling Signal Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|SMUGGLESIGNAL" />
+                <Button Grid.Row="18" Text="DEF-37 TLS Posture Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|TLSPOSTURE" />
+                <Button Grid.Row="18" Grid.Column="1" Text="DEF-38 GraphQL Depth Bomb Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|GRAPHQLDEPTH" />
+                <Button Grid.Row="19" Text="DEF-39 WebSocket Upgrade/Auth Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|WEBSOCKETAUTH" />
+                <Button Grid.Row="19" Grid.Column="1" Text="DEF-40 gRPC Reflection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|GRPCREFLECT" />
+                <Button Grid.Row="20" Text="DEF-41 Rate-Limit Evasion Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|RATELIMITEVASION" />
+                <Button Grid.Row="20" Grid.Column="1" Text="DEF-42 Advanced SSRF Encoding Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|SSRFENCODED" />
+                <Button Grid.Row="21" Text="DEF-43 File Upload Validation Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|FILEUPLOAD" />
+                <Button Grid.Row="21" Grid.Column="1" Text="DEF-44 OpenAPI Schema Mismatch Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OPENAPIMISMATCH" />
+                <Button Grid.Row="22" Text="DEF-45 Log Poisoning Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|LOGPOISON" />
+                <Button Grid.Row="22" Grid.Column="1" Text="DEF-46 OIDC State Replay Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OIDCSTATE" />
+                <Button Grid.Row="23" Text="DEF-47 OIDC Nonce Replay Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OIDCNONCE" />
+                <Button Grid.Row="23" Grid.Column="1" Text="DEF-48 OIDC Issuer Validation Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OIDCISS" />
+                <Button Grid.Row="24" Text="DEF-49 OIDC Audience Validation Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OIDCAUD" />
+                <Button Grid.Row="24" Grid.Column="1" Text="DEF-50 OIDC Token Substitution Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OIDCSUB" />
+                <Button Grid.Row="25" Text="DEF-51 mTLS Required Client Cert Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|MTLSREQUIRED" />
+                <Button Grid.Row="25" Grid.Column="1" Text="DEF-52 mTLS Endpoint Exposure Check" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|MTLSEXPOSURE" />
+                <Button Grid.Row="26" Text="DEF-53 Workflow Step Skipping Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|WORKFLOWSKIP" />
+                <Button Grid.Row="26" Grid.Column="1" Text="DEF-54 Workflow Duplicate Transition Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|WORKFLOWDUP" />
+                <Button Grid.Row="27" Text="DEF-55 TOCTOU State Race Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|WORKFLOWTOCTOU" />
+                <Button Grid.Row="27" Grid.Column="1" Text="DEF-56 JWT kid Header Injection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTKID" />
+                <Button Grid.Row="28" Text="DEF-57 JWT jku Remote Key Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTJKU" />
+                <Button Grid.Row="28" Grid.Column="1" Text="DEF-58 JWT x5u Header Injection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTX5U" />
+                <Button Grid.Row="29" Text="DEF-59 JWT RS256-HS256 Confusion Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTRSHS" />
+                <Button Grid.Row="29" Grid.Column="1" Text="DEF-60 HTTP CL.TE Desync Signal Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DESYNCCLTE" />
+                <Button Grid.Row="30" Text="DEF-61 HTTP TE.CL Desync Signal Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DESYNCTECL" />
+                <Button Grid.Row="30" Grid.Column="1" Text="DEF-62 Dual Content-Length Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DESYNCDCL" />
+                <Button Grid.Row="31" Text="DEF-63 HTTP/2 Downgrade Signal Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|HTTP2DOWNGRADE" />
+                <Button Grid.Row="31" Grid.Column="1" Text="DEF-64 gRPC Metadata Abuse Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|GRPCMETA" />
+                <Button Grid.Row="32" Text="DEF-65 WebSocket Message Injection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|WSMESSAGE" />
+                <Button Grid.Row="32" Grid.Column="1" Text="DEF-66 LLM Prompt Injection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|LLMPROMPT" />
+                <Button Grid.Row="33" Text="DEF-67 Coupon/Credit Exhaustion Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|COUPONABUSE" />
+                <Button Grid.Row="33" Grid.Column="1" Text="DEF-68 Cloud Metadata (IMDSv2) Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|IMDSV2" />
+                <Button Grid.Row="34" Text="DEF-69 DNS Rebinding Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DNSREBIND" />
+                <Button Grid.Row="34" Grid.Column="1" Text="DEF-70 JWKS Endpoint Poisoning Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JWTJWKSPORT" />
+                <Button Grid.Row="35" Text="DEF-71 OIDC Discovery Hijacking Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OIDCDISCOVERY" />
+                <Button Grid.Row="35" Grid.Column="1" Text="DEF-72 Certificate Trust Chain Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|CERTCHAIN" />
+                <Button Grid.Row="36" Text="DEF-73 Numerical Overflow/Underflow Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|NUMERICFLOW" />
+                <Button Grid.Row="36" Grid.Column="1" Text="DEF-74 Double-Spend TOCTOU Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DOUBLESPEND" />
+                <Button Grid.Row="37" Text="DEF-75 gRPC Protobuf Fuzzing Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|GRPCPROTOFUZZ" />
+                <Button Grid.Row="37" Grid.Column="1" Text="DEF-76 GraphQL Complexity Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|GRAPHQLCOMPLEX" />
+                <Button Grid.Row="38" Text="DEF-77 WebSocket Fragmentation Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|WSFRAGMENT" />
+                <Button Grid.Row="38" Grid.Column="1" Text="DEF-78 Side-Channel Timing Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|TIMINGLEAK" />
+                <Button Grid.Row="39" Text="DEF-79 Egress Filtering Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|EGRESS" />
+                <Button Grid.Row="39" Grid.Column="1" Text="DEF-80 Docker API Exposure Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DOCKERAPI" />
+                <Button Grid.Row="40" Text="DEF-81 Port Scan/Service Fingerprint Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|PORTFINGER" />
+                <Button Grid.Row="40" Grid.Column="1" Text="DEF-82 Cloud Storage/Public Asset Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|CLOUDPUB" />
+                <Button Grid.Row="41" Text="DEF-83 Exposed .env/Config Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|ENVEXPOSE" />
+                <Button Grid.Row="41" Grid.Column="1" Text="DEF-84 Subdomain Takeover Signal Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|SUBTAKEOVER" />
+                <Button Grid.Row="42" Text="DEF-85 CSP Header Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|CSPHEADER" />
+                <Button Grid.Row="42" Grid.Column="1" Text="DEF-86 Clickjacking Header Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|CLICKJACK" />
+                <Button Grid.Row="43" Text="DEF-87 DOM XSS Signal Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|DOMXSSSIG" />
+                <Button Grid.Row="43" Grid.Column="1" Text="DEF-88 Third-Party Script Inventory Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|SCRIPTSUPPLY" />
+                <Button Grid.Row="44" Text="DEF-89 Mobile Certificate Pinning Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|MOBILEPINNING" />
+                <Button Grid.Row="44" Grid.Column="1" Text="DEF-90 Mobile Local Storage Sensitivity Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|MOBILESTORAGE" />
+                <Button Grid.Row="45" Text="DEF-91 Mobile Deep-Link Hijacking Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|MOBILEDEEPLINK" />
+                <Button Grid.Row="45" Grid.Column="1" Text="DEF-92 Parameter Shadowing Analysis" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|PARAMSHADOW" />
+                <Button Grid.Row="46" Text="DEF-93 JSON Parameter Smuggling Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|JSONSMUGGLE" />
+                <Button Grid.Row="46" Grid.Column="1" Text="DEF-94 Header Auth Override Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|AUTHHEADEROVR" />
+                <Button Grid.Row="47" Text="DEF-95 Cross-Tenant Leakage Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|TENANTLEAK" />
+                <Button Grid.Row="47" Grid.Column="1" Text="DEF-96 Async Job Queue Injection Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|ASYNCJOBINJ" />
+                <Button Grid.Row="48" Text="DEF-97 File Parser Abuse Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|FILEPARSERABUSE" />
+                <Button Grid.Row="48" Grid.Column="1" Text="DEF-98 API Version Fallback Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|VERSIONFALLBACK" />
+                <Button Grid.Row="49" Text="DEF-99 Cache Key Confusion Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|CACHEKEYCONF" />
+                <Button Grid.Row="49" Grid.Column="1" Text="DEF-100 Kerberos/Negotiate Auth Probe" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|KERBEROSNEG" />
+                <Button Grid.Row="50" Text="DEF-101 OAuth 1.0 Signature Validation" Clicked="OnRunFrameworkTestClicked" CommandParameter="Advanced API Checks|OAUTH1SIG" />
+            </Grid>
+
+            <Label x:Name="RunSectionAnchor" Text="Domain Security Suites" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,12,0,6" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto,Auto">
+                <Button Text="Authorization &amp; Access Control" Clicked="OnRunNamedSuiteClicked" CommandParameter="SUITE_AUTHZ" />
+                <Button Grid.Column="1" Text="Injection &amp; Input Validation" Clicked="OnRunNamedSuiteClicked" CommandParameter="SUITE_INJECTION" />
+                <Button Grid.Row="1" Text="Identity &amp; Token Security" Clicked="OnRunNamedSuiteClicked" CommandParameter="SUITE_IDENTITY" />
+                <Button Grid.Row="1" Grid.Column="1" Text="API Infrastructure &amp; Protocol" Clicked="OnRunNamedSuiteClicked" CommandParameter="SUITE_INFRA" />
+                <Button Grid.Row="2" Text="HTTP &amp; Server Hardening" Clicked="OnRunNamedSuiteClicked" CommandParameter="SUITE_HARDENING" />
+                <Button Grid.Row="2" Grid.Column="1" Text="Resilience &amp; Information Disclosure" Clicked="OnRunNamedSuiteClicked" CommandParameter="SUITE_RESILIENCE" />
+            </Grid>
+            <Button Text="Run All Standards Categories"
+                    Margin="0,6,0,2"
+                    BackgroundColor="#0F766E"
+                    TextColor="White"
+                    Clicked="OnRunAllFrameworksClicked" />
+            <Button Text="Run Everything (Standards + Suites + Advanced)"
+                    Margin="0,2,0,6"
+                    BackgroundColor="#0F766E"
+                    TextColor="White"
+                    Clicked="OnRunEverythingClicked" />
+            <Button Text="Run Validation Sequence"
+                    Margin="0,2,0,10"
+                    BackgroundColor="#6B7280"
+                    TextColor="White"
+                    Clicked="OnRunValidationHarnessClicked" />
+
+            <Label x:Name="CveSectionAnchor" Text="CVE &amp; Test Reference" FontAttributes="Bold" />
+            <VerticalStackLayout Spacing="6">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="6" RowDefinitions="Auto,Auto">
+                <Button Text="Sync Complete CVE Corpus (NVD)"
+                        Clicked="OnSyncCveCorpusClicked" />
+                <Button Grid.Column="1"
+                        Text="Build CVE Function Map"
+                        Clicked="OnBuildFunctionMapClicked" />
+                <Button Grid.Row="1"
+                        Text="Load Local CVE Corpus Summary"
+                        Clicked="OnLoadCveCorpusClicked" />
+                <Button Grid.Row="1"
+                        Grid.Column="1"
+                        Text="Load Function Map Paged View"
+                        Clicked="OnLoadFunctionMapPagedClicked" />
+            </Grid>
+            </VerticalStackLayout>
+            <Label x:Name="ResultsSectionAnchor"
+                   Text="Results"
+                   FontAttributes="Bold"
+                   SemanticProperties.HeadingLevel="Level2" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto" RowSpacing="6">
+                <Button Text="Load Log"
+                        Clicked="OnLoadLogClicked" />
+                <Button Grid.Column="1"
+                        Text="Save Log"
+                        Clicked="OnSaveLogClicked" />
+            </Grid>
+            <Grid ColumnDefinitions="*,*"
+                  ColumnSpacing="8"
+                  RowDefinitions="Auto,Auto"
+                  RowSpacing="6">
+                <Button x:Name="PrevPageButton"
+                        Text="Prev Page"
+                        Clicked="OnPrevCvePageClicked"
+                        BackgroundColor="#6B7280"
+                        TextColor="White"
+                        HorizontalOptions="Fill"
+                        IsEnabled="False" />
+                <Button Grid.Column="1"
+                        x:Name="NextPageButton"
+                        Text="Next Page"
+                        Clicked="OnNextCvePageClicked"
+                        BackgroundColor="#6B7280"
+                        TextColor="White"
+                        HorizontalOptions="Fill"
+                        IsEnabled="False" />
+                <Label Grid.Row="1"
+                       Grid.ColumnSpan="2"
+                       x:Name="ResultsPageLabel"
+                       Margin="0,6,0,0"
+                       HorizontalTextAlignment="Center"
+                       TextColor="#475569"
+                       Text="" />
+            </Grid>
+            <Editor x:Name="ResultsEditor"
+                    AutoSize="TextChanges"
+                    MinimumHeightRequest="420"
+                    IsReadOnly="True"
+                    BackgroundColor="White"
+                    Placeholder="Test results will appear here." />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowSpacing="3" RowDefinitions="Auto,Auto,Auto" Margin="0,0,0,0">
+                <Entry Grid.Row="0"
+                       Placeholder="Search specific CVE (e.g., CVE-2024-12345)"
+                       x:Name="CveSearchEntry" />
+                <Button Grid.Row="0"
+                        Grid.Column="1"
+                        Text="Find CVE"
+                        HeightRequest="44"
+                        Clicked="OnFindCveClicked" />
+                <Entry Grid.Row="1"
+                       x:Name="CvePageEntry"
+                       Placeholder="Page #"
+                       Keyboard="Numeric" />
+                <Button Grid.Row="1"
+                        Grid.Column="1"
+                        Text="Go To Page"
+                        HeightRequest="44"
+                        Clicked="OnGoToCvePageClicked" />
+                <Picker Grid.Row="2"
+                        x:Name="PriorityFilterPicker"
+                        SelectedIndexChanged="OnPriorityFilterChanged">
+                    <Picker.Items>
+                        <x:String>Off</x:String>
+                        <x:String>High</x:String>
+                        <x:String>Medium</x:String>
+                        <x:String>Low</x:String>
+                    </Picker.Items>
+                </Picker>
+                <Button Grid.Row="2"
+                        Grid.Column="1"
+                        Text="Apply Priority Filter"
+                        HeightRequest="44"
+                        Clicked="OnApplyPriorityFilterClicked" />
+            </Grid>
+            <BoxView x:Name="BottomSectionAnchor"
+                     Margin="0,-12,0,0"
+                     HeightRequest="1"
+                     Opacity="0" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
